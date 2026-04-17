@@ -1,0 +1,12 @@
+[package]
+name = "gateorix-plugin-notifications"
+description = "Gateorix notifications plugin — desktop notification support"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gateorix-host-core = { path = "../../host-core" }
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gateorix"
+version = "0.1.0"
+description = "Gateorix Python adapter SDK — build desktop app backends in Python"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/gateorix/gateorix"
+Repository = "https://github.com/gateorix/gateorix"

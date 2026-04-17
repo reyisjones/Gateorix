@@ -1,0 +1,22 @@
+{
+  "name": "hello-gateorix",
+  "version": "0.1.0",
+  "frontend": {
+    "devUrl": "http://localhost:5173",
+    "entry": "dist/index.html"
+  },
+  "permissions": {
+    "filesystem": [],
+    "process": false,
+    "notifications": false,
+    "clipboard": false
+  },
+  "windows": [
+    {
+      "id": "main",
+      "title": "Gateorix App",
+      "width": 800,
+      "height": 600
+    }
+  ]
+}

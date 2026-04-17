@@ -1,0 +1,21 @@
+{
+  "name": "@gateorix/bridge",
+  "version": "0.1.0",
+  "description": "Gateorix JavaScript/TypeScript bridge — frontend SDK for communicating with the host core",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gateorix/gateorix.git",
+    "directory": "sdk/js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Tests not yet configured\""
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

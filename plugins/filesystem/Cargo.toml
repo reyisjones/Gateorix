@@ -1,0 +1,12 @@
+[package]
+name = "gateorix-plugin-filesystem"
+description = "Gateorix filesystem plugin — scoped file read/write operations"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gateorix-host-core = { path = "../../host-core" }
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
