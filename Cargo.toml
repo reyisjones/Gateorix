@@ -7,6 +7,9 @@ members = [
     "plugins/notifications",
     "plugins/clipboard",
 ]
+exclude = [
+    "examples/hello-react-python/frontend/src-tauri",
+]
 
 [workspace.package]
 version = "0.1.0"
