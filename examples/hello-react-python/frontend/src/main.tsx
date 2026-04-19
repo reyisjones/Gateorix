@@ -1,6 +1,33 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 
+// Detect if we're running inside a Tauri webview
+const isTauri = "__TAURI_INTERNALS__" in window;
+
+// Dynamically import Tauri invoke only when running in Tauri
+async function invokeBackend(channel: string, payload: Record<string, unknown>) {
+  if (isTauri) {
+    // Tauri IPC — calls the Rust invoke_backend command which relays to Python sidecar
+    const { invoke } = await import("@tauri-apps/api/core");
+    return invoke<{ ok: boolean; payload: Record<string, unknown> }>("invoke_backend", {
+      channel,
+      payload,
+    });
+  } else {
+    // HTTP dev bridge fallback — for browser development without Tauri
+    const res = await fetch("http://localhost:3001/invoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: crypto.randomUUID(),
+        channel,
+        payload,
+      }),
+    });
+    return res.json();
+  }
+}
+
 function App() {
   const [greeting, setGreeting] = useState("");
   const [name, setName] = useState("");
@@ -13,26 +40,19 @@ function App() {
     setGreeting("");
 
     try {
-      // Call the Python backend via the HTTP dev bridge
-      const res = await fetch("http://localhost:3001/invoke", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: crypto.randomUUID(),
-          channel: "runtime.greet",
-          payload: { name: name || "World" },
-        }),
-      });
-      const data = await res.json();
+      const data = await invokeBackend("runtime.greet", { name: name || "World" });
 
       if (data.ok) {
-        setGreeting(data.payload.message);
+        setGreeting((data.payload as { message: string }).message);
       } else {
-        setError(data.payload?.error || "unknown error");
+        setError((data.payload as { error?: string })?.error || "unknown error");
       }
     } catch (err) {
-      // Network error — bridge is probably not running
-      setError("Cannot reach backend. Is the bridge running? (python main.py --http)");
+      setError(
+        isTauri
+          ? `Sidecar error: ${err}`
+          : "Cannot reach backend. Is the bridge running? (python main.py --http)"
+      );
     } finally {
       setLoading(false);
     }
@@ -42,6 +62,9 @@ function App() {
     <div style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
       <h1>Hello Gateorix</h1>
       <p>A React frontend + Python backend desktop app.</p>
+      <p style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+        IPC mode: {isTauri ? "Tauri (native)" : "HTTP dev bridge"}
+      </p>
 
       <div style={{ marginTop: "2rem" }}>
         <input
