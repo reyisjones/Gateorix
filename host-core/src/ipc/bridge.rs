@@ -4,6 +4,7 @@
 //! either a host-core plugin or a runtime adapter.
 
 use std::collections::HashMap;
+use tracing::{debug, warn};
 use crate::ipc::protocol::{IpcRequest, IpcResponse};
 
 /// Handler function type for IPC channels.
@@ -42,12 +43,26 @@ impl Bridge {
             .next()
             .unwrap_or(&request.channel);
 
+        debug!(
+            id = %request.id,
+            channel = %request.channel,
+            namespace = %namespace,
+            "dispatching IPC request"
+        );
+
         match self.handlers.get(namespace) {
             Some(handler) => handler(request),
-            None => IpcResponse::error(
-                &request.id,
-                format!("no handler registered for channel: {}", request.channel),
-            ),
+            None => {
+                warn!(
+                    id = %request.id,
+                    channel = %request.channel,
+                    "no handler registered for channel"
+                );
+                IpcResponse::error(
+                    &request.id,
+                    format!("no handler registered for channel: {}", request.channel),
+                )
+            }
         }
     }
 }

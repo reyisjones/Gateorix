@@ -2,7 +2,11 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
-use tauri::{Manager, State};
+use tauri::{
+    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
+    tray::TrayIconBuilder,
+    Manager, State, WebviewUrl, WebviewWindowBuilder,
+};
 
 /// Holds the Python sidecar process so we can send/receive messages.
 struct Sidecar(Mutex<Option<Child>>);
@@ -119,19 +123,205 @@ fn logout() -> Result<(), String> {
     Ok(())
 }
 
+// ─── Window Management ───────────────────────────────────────
+
+#[tauri::command]
+fn toggle_fullscreen(window: tauri::WebviewWindow) -> Result<(), String> {
+    let is_fs = window.is_fullscreen().map_err(|e| e.to_string())?;
+    window.set_fullscreen(!is_fs).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn resize_window(window: tauri::WebviewWindow, width: f64, height: f64) -> Result<(), String> {
+    window
+        .set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn minimize_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.minimize().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn maximize_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    let is_max = window.is_maximized().map_err(|e| e.to_string())?;
+    if is_max {
+        window.unmaximize().map_err(|e| e.to_string())
+    } else {
+        window.maximize().map_err(|e| e.to_string())
+    }
+}
+
+#[tauri::command]
+fn open_new_window(
+    app: tauri::AppHandle,
+    label: String,
+    title: String,
+    url: String,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    let webview_url = if url.starts_with("http") {
+        WebviewUrl::External(url.parse().map_err(|e: url::ParseError| e.to_string())?)
+    } else {
+        WebviewUrl::App(url.into())
+    };
+    WebviewWindowBuilder::new(&app, &label, webview_url)
+        .title(&title)
+        .inner_size(width, height)
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn close_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
+}
+
+// ─── File Dialog ─────────────────────────────────────────────
+
+#[tauri::command]
+async fn open_file_dialog(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let file = window
+        .dialog()
+        .file()
+        .blocking_pick_file();
+    Ok(file.map(|f| f.to_string()))
+}
+
+#[tauri::command]
+async fn save_file_dialog(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let file = window
+        .dialog()
+        .file()
+        .blocking_save_file();
+    Ok(file.map(|f| f.to_string()))
+}
+
+#[tauri::command]
+async fn open_folder_dialog(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let folder = window
+        .dialog()
+        .file()
+        .blocking_pick_folder();
+    Ok(folder.map(|f| f.to_string()))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(Sidecar(Mutex::new(None)))
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             invoke_backend,
             get_settings,
             save_settings,
             login,
             logout,
+            toggle_fullscreen,
+            resize_window,
+            minimize_window,
+            maximize_window,
+            open_new_window,
+            close_window,
+            open_file_dialog,
+            save_file_dialog,
+            open_folder_dialog,
         ])
         .setup(|app| {
+            // ─── App Menu ────────────────────────────────
+            let file_menu = Submenu::with_items(
+                app,
+                "File",
+                true,
+                &[
+                    &MenuItem::with_id(app, "open_file", "Open File...", true, Some("CmdOrCtrl+O"))?,
+                    &MenuItem::with_id(app, "save_file", "Save As...", true, Some("CmdOrCtrl+Shift+S"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &MenuItem::with_id(app, "quit", "Quit", true, Some("CmdOrCtrl+Q"))?,
+                ],
+            )?;
+
+            let view_menu = Submenu::with_items(
+                app,
+                "View",
+                true,
+                &[
+                    &MenuItem::with_id(app, "fullscreen", "Toggle Fullscreen", true, Some("F11"))?,
+                    &MenuItem::with_id(app, "zoom_in", "Zoom In", true, Some("CmdOrCtrl+Plus"))?,
+                    &MenuItem::with_id(app, "zoom_out", "Zoom Out", true, Some("CmdOrCtrl+Minus"))?,
+                ],
+            )?;
+
+            let help_menu = Submenu::with_items(
+                app,
+                "Help",
+                true,
+                &[
+                    &MenuItem::with_id(app, "about", "About Gateorix", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "docs", "Documentation", true, None::<&str>)?,
+                ],
+            )?;
+
+            let menu = Menu::with_items(app, &[&file_menu, &view_menu, &help_menu])?;
+            app.set_menu(menu)?;
+
+            app.on_menu_event(|app, event| {
+                match event.id().as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    "fullscreen" => {
+                        if let Some(win) = app.get_webview_window("main") {
+                            let is_fs = win.is_fullscreen().unwrap_or(false);
+                            let _ = win.set_fullscreen(!is_fs);
+                        }
+                    }
+                    "about" => {
+                        if let Some(win) = app.get_webview_window("main") {
+                            let _ = win.eval("alert('Gateorix v0.1.0 — Web UI, Native Power')");
+                        }
+                    }
+                    _ => {}
+                }
+            });
+
+            // ─── System Tray ─────────────────────────────
+            let tray_menu = Menu::with_items(
+                app,
+                &[
+                    &MenuItem::with_id(app, "tray_show", "Show Window", true, None::<&str>)?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &MenuItem::with_id(app, "tray_quit", "Quit", true, None::<&str>)?,
+                ],
+            )?;
+
+            let _tray = TrayIconBuilder::new()
+                .tooltip("Gateorix")
+                .menu(&tray_menu)
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "tray_show" => {
+                            if let Some(win) = app.get_webview_window("main") {
+                                let _ = win.show();
+                                let _ = win.set_focus();
+                            }
+                        }
+                        "tray_quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
+
+            // ─── Logging ─────────────────────────────────
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()

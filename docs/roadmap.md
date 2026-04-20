@@ -37,16 +37,16 @@ Gateorix development is organized into phases. Each phase builds on the previous
 - [x] Login / logout flow with Rust-side credential validation
 - [x] Dual IPC mode — Tauri native or HTTP bridge fallback
 - [x] CSS custom properties for theming
-- [ ] `gateorix dev` — start frontend + host + sidecar with hot reload
-- [ ] `gateorix build` — produce a bundled app with sidecar
-- [ ] `gateorix doctor` — full environment checks
-- [ ] Window management (multi-window, resize, fullscreen)
-- [ ] Menu and system tray support
-- [ ] File dialog integration
-- [ ] Go runtime adapter SDK
-- [ ] .NET (C#/F#) runtime adapter SDK
-- [ ] Structured logging and diagnostics
-- [ ] VS Code extension for debugging and IntelliSense
+- [x] `gateorix dev` — start frontend + host + sidecar with hot reload
+- [x] `gateorix build` — produce a bundled app with sidecar
+- [x] `gateorix doctor` — full environment checks
+- [x] Window management (multi-window, resize, fullscreen)
+- [x] Menu and system tray support
+- [x] File dialog integration
+- [x] Go runtime adapter SDK
+- [x] .NET (C#/F#) runtime adapter SDK
+- [x] Structured logging and diagnostics
+- [x] VS Code extension for debugging and IntelliSense
 
 ---
 

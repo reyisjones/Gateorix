@@ -6,6 +6,7 @@
 
 pub mod app;
 pub mod ipc;
+pub mod logging;
 pub mod permissions;
 pub mod plugins;
 pub mod runtime;

@@ -1,0 +1,74 @@
+{
+  "name": "gateorix",
+  "displayName": "Gateorix",
+  "description": "Developer tools for Gateorix desktop applications — IntelliSense, debugging, and commands",
+  "version": "0.1.0",
+  "publisher": "gateorix",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reyisjones/Gateorix"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Snippets"
+  ],
+  "keywords": [
+    "gateorix",
+    "desktop",
+    "tauri",
+    "cross-platform"
+  ],
+  "activationEvents": [
+    "workspaceContains:gateorix.config.json"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gateorix.init",
+        "title": "Gateorix: Initialize New Project"
+      },
+      {
+        "command": "gateorix.dev",
+        "title": "Gateorix: Start Dev Mode"
+      },
+      {
+        "command": "gateorix.build",
+        "title": "Gateorix: Build Application"
+      },
+      {
+        "command": "gateorix.doctor",
+        "title": "Gateorix: Doctor (Check Environment)"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "gateorix.config.json",
+        "url": "./schemas/gateorix-config.schema.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "json",
+        "filenames": [
+          "gateorix.config.json"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  }
+}

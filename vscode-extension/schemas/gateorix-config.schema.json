@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gateorix Configuration",
+  "description": "Configuration for a Gateorix desktop application",
+  "type": "object",
+  "required": ["name", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Application name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Application version (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "frontend": {
+      "type": "object",
+      "description": "Frontend configuration",
+      "properties": {
+        "devUrl": {
+          "type": "string",
+          "description": "Dev server URL",
+          "default": "http://localhost:5173"
+        },
+        "entry": {
+          "type": "string",
+          "description": "Production entry HTML file path",
+          "default": "dist/index.html"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "description": "Backend runtime adapter",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Runtime language",
+          "enum": ["python", "go", "dotnet", "swift"]
+        },
+        "entry": {
+          "type": "string",
+          "description": "Entry point file"
+        }
+      },
+      "required": ["type", "entry"]
+    },
+    "permissions": {
+      "type": "object",
+      "description": "Permission declarations",
+      "properties": {
+        "filesystem": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "array", "items": { "type": "string" } }
+          ],
+          "description": "Filesystem access paths (or false to deny)"
+        },
+        "process": {
+          "type": "boolean",
+          "description": "Allow spawning processes"
+        },
+        "notifications": {
+          "type": "boolean",
+          "description": "Allow system notifications"
+        },
+        "clipboard": {
+          "type": "boolean",
+          "description": "Allow clipboard access"
+        }
+      }
+    },
+    "windows": {
+      "type": "array",
+      "description": "Window definitions",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique window identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Window title"
+          },
+          "width": {
+            "type": "number",
+            "description": "Window width in pixels",
+            "default": 1200
+          },
+          "height": {
+            "type": "number",
+            "description": "Window height in pixels",
+            "default": 800
+          }
+        },
+        "required": ["id", "title"]
+      }
+    }
+  }
+}

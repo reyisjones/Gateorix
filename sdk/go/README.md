@@ -1,14 +1,43 @@
 # Gateorix Go Adapter SDK
 
-> **Status:** Planned for Phase 2
+Go runtime adapter for building Gateorix desktop app backends in Go.
 
-This directory will contain the Go adapter SDK, enabling desktop app
-backends to be written in Go and communicate with the Gateorix host
-core over the adapter protocol.
+## Installation
 
-## Planned Features
+```bash
+go get github.com/gateorix/gateorix/sdk/go/gateorix
+```
 
-- Go module `github.com/gateorix/gateorix/sdk/go`
-- Function-based command registration
-- Stdio and HTTP transport support
+## Quick Start
+
+```go
+package main
+
+import "github.com/gateorix/gateorix/sdk/go/gateorix"
+
+func main() {
+    adapter := gateorix.NewAdapter()
+
+    adapter.Command("greet", func(payload map[string]any) (any, error) {
+        name, _ := payload["name"].(string)
+        if name == "" {
+            name = "World"
+        }
+        return map[string]string{"message": "Hello, " + name + "!"}, nil
+    })
+
+    // Stdio mode (default — used by Tauri sidecar)
+    adapter.Run()
+
+    // Or HTTP mode (for browser-based development)
+    // adapter.RunHTTP(":3001")
+}
+```
+
+## Features
+
+- Stdio transport (newline-delimited JSON)
+- HTTP transport for development
+- Zero external dependencies
 - Single static binary output
+- Automatic `runtime.` prefix stripping
