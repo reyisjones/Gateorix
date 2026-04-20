@@ -1,14 +1,41 @@
 # Gateorix Swift Adapter SDK
 
-> **Status:** Planned for Phase 3
+> **Status:** Phase 3 — Initial Implementation
 
-This directory will contain the Swift adapter SDK, enabling desktop
-app backends to be written in Swift and communicate with the Gateorix
-host core over the adapter protocol.
+Swift adapter SDK for writing Gateorix desktop app backends in Swift.
+Communicates with the host core over the adapter protocol (stdio JSON).
 
-## Planned Features
+## Installation
 
-- Swift Package `GateorixAdapter`
-- Protocol-based command registration
-- Stdio transport
-- macOS-native integration opportunities
+Add to your `Package.swift`:
+
+```swift
+.package(path: "../sdk/swift")
+```
+
+## Usage
+
+```swift
+import GateorixAdapter
+
+let adapter = GateorixAdapter()
+
+adapter.command("greet") { payload in
+    let name = payload["name"] as? String ?? "World"
+    return ["message": AnyCodable("Hello from Swift, \(name)!")]
+}
+
+adapter.run()
+```
+
+## Features
+
+- `GateorixAdapter` class with command registration
+- Stdio transport (newline-delimited JSON)
+- `IpcRequest` / `IpcResponse` protocol types
+- `AnyCodable` wrapper for type-erased JSON values
+
+## Requirements
+
+- Swift 5.9+
+- macOS 13+

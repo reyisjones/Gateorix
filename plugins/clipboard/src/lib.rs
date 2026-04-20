@@ -5,6 +5,7 @@
 
 use gateorix_host_core::ipc::protocol::{IpcRequest, IpcResponse};
 use gateorix_host_core::plugins::Plugin;
+use arboard::Clipboard;
 use tracing::info;
 
 pub struct ClipboardPlugin;
@@ -15,10 +16,13 @@ impl ClipboardPlugin {
     }
 
     fn read_text(&self, request: &IpcRequest) -> IpcResponse {
-        // Placeholder: actual implementation will use a clipboard crate
-        // (e.g. arboard or clipboard-rs)
-        info!("clipboard read (stub)");
-        IpcResponse::ok(&request.id, serde_json::json!({ "text": "" }))
+        match Clipboard::new().and_then(|mut cb| cb.get_text()) {
+            Ok(text) => {
+                info!("clipboard read: {} chars", text.len());
+                IpcResponse::ok(&request.id, serde_json::json!({ "text": text }))
+            }
+            Err(e) => IpcResponse::error(&request.id, format!("clipboard read failed: {e}")),
+        }
     }
 
     fn write_text(&self, request: &IpcRequest) -> IpcResponse {
@@ -27,9 +31,13 @@ impl ClipboardPlugin {
             None => return IpcResponse::error(&request.id, "missing 'text' in payload"),
         };
 
-        // Placeholder: actual implementation will use a clipboard crate
-        info!(text = %text, "clipboard write (stub)");
-        IpcResponse::ok(&request.id, serde_json::json!({ "written": true }))
+        match Clipboard::new().and_then(|mut cb| cb.set_text(text.to_owned())) {
+            Ok(()) => {
+                info!(text_len = text.len(), "clipboard write");
+                IpcResponse::ok(&request.id, serde_json::json!({ "written": true }))
+            }
+            Err(e) => IpcResponse::error(&request.id, format!("clipboard write failed: {e}")),
+        }
     }
 }
 

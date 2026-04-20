@@ -195,3 +195,23 @@ export async function doctorCommand(): Promise<void> {
   }
   console.log("");
 }
+
+/**
+ * Quick environment check — runs core toolchain checks only.
+ * Prints warnings but does NOT block. Called automatically by init/dev/build.
+ */
+export function quickDoctorCheck(): void {
+  const coreChecks: CheckResult[] = [
+    runCheck("Rust", "rustc --version", "1.70.0"),
+    runCheck("Node.js", "node --version", "18.0.0"),
+  ];
+  const fails = coreChecks.filter((r) => r.status === "fail");
+  if (fails.length > 0) {
+    console.log(chalk.yellow("\n  ⚠ Doctor warning:"));
+    for (const f of fails) {
+      const hint = f.hint ? chalk.dim(` (${f.hint})`) : "";
+      console.log(`    ${icon(f.status)} ${f.name}: ${f.detail}${hint}`);
+    }
+    console.log(chalk.dim("    Run `gateorix doctor` for a full check.\n"));
+  }
+}

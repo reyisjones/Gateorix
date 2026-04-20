@@ -11,6 +11,7 @@ import { spawn, ChildProcess } from "node:child_process";
 import path from "node:path";
 import fs from "fs-extra";
 import chalk from "chalk";
+import { quickDoctorCheck } from "./doctor.js";
 
 const children: ChildProcess[] = [];
 
@@ -74,6 +75,10 @@ export async function devCommand(): Promise<void> {
   }
 
   const config = await fs.readJson(configPath);
+
+  // Quick environment check (warns but does not block)
+  quickDoctorCheck();
+
   console.log(chalk.bold(`\n  Starting Gateorix dev mode — ${config.name || "project"}\n`));
 
   // Handle graceful shutdown

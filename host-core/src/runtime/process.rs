@@ -4,7 +4,8 @@
 //! that serve as backend runtime adapters.
 
 use std::process::{Child, Command, Stdio};
-use tracing::{error, info};
+use std::time::{Duration, Instant};
+use tracing::{error, info, warn};
 
 use crate::runtime::adapter::{AdapterConfig, AdapterError, AdapterStatus, RuntimeAdapter};
 
@@ -16,6 +17,9 @@ pub struct StdioProcess {
     config: AdapterConfig,
     child: Option<Child>,
     status: AdapterStatus,
+    restart_count: u32,
+    max_restarts: u32,
+    last_start: Option<Instant>,
 }
 
 impl StdioProcess {
@@ -24,7 +28,69 @@ impl StdioProcess {
             config,
             child: None,
             status: AdapterStatus::Stopped,
+            restart_count: 0,
+            max_restarts: 3,
+            last_start: None,
         }
+    }
+
+    /// Check if the sidecar process is still alive.
+    /// Returns true if healthy, false if crashed or exited.
+    pub fn health_check(&mut self) -> bool {
+        if let Some(ref mut child) = self.child {
+            match child.try_wait() {
+                Ok(Some(exit)) => {
+                    let msg = format!("sidecar exited with status: {exit}");
+                    warn!("{}", msg);
+                    self.status = AdapterStatus::Crashed(msg);
+                    self.child = None;
+                    false
+                }
+                Ok(None) => true, // still running
+                Err(e) => {
+                    let msg = format!("health check failed: {e}");
+                    warn!("{}", msg);
+                    self.status = AdapterStatus::Crashed(msg);
+                    false
+                }
+            }
+        } else {
+            false
+        }
+    }
+
+    /// Attempt to restart the sidecar if it has crashed.
+    /// Respects max_restarts limit and enforces a minimum uptime
+    /// before counting a restart (to avoid rapid restart loops).
+    pub fn try_restart(&mut self) -> Result<(), AdapterError> {
+        if self.restart_count >= self.max_restarts {
+            error!(
+                "sidecar exceeded max restarts ({}), not restarting",
+                self.max_restarts
+            );
+            return Err(AdapterError::ProcessExited(format!(
+                "exceeded max restarts ({})",
+                self.max_restarts
+            )));
+        }
+
+        // If the process ran for less than 5 seconds, count it as a fast crash
+        if let Some(last) = self.last_start {
+            if last.elapsed() < Duration::from_secs(5) {
+                self.restart_count += 1;
+                warn!(
+                    "sidecar crashed quickly (restart {}/{})",
+                    self.restart_count, self.max_restarts
+                );
+            } else {
+                // Reset counter if it ran long enough
+                self.restart_count = 0;
+            }
+        }
+
+        info!("restarting sidecar process...");
+        self.child = None;
+        self.start()
     }
 }
 
@@ -56,6 +122,7 @@ impl RuntimeAdapter for StdioProcess {
             Ok(child) => {
                 self.child = Some(child);
                 self.status = AdapterStatus::Running;
+                self.last_start = Some(Instant::now());
                 info!("sidecar process started");
                 Ok(())
             }

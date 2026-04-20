@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 gateorix-host-core = { path = "../../host-core" }
+arboard = "3"
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true

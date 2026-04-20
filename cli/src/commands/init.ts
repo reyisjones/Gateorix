@@ -9,6 +9,7 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import fs from "fs-extra";
 import chalk from "chalk";
+import { quickDoctorCheck } from "./doctor.js";
 
 interface InitOptions {
   template?: string;
@@ -69,6 +70,9 @@ export async function initCommand(
     console.error(chalk.red(`\n  Error: directory "${name}" already exists.\n`));
     process.exit(1);
   }
+
+  // Quick environment check (warns but does not block)
+  quickDoctorCheck();
 
   // Interactive prompts
   const inquirer = (await import("inquirer")).default;

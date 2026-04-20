@@ -80,6 +80,34 @@ export async function addRuntimeCommand(language: string): Promise<void> {
   await fs.writeJson(configPath, config, { spaces: 2 });
   console.log(`  ${chalk.green("✓")} Updated gateorix.config.json`);
 
+  // Update tauri.conf.json with externalBin sidecar config
+  const tauriConfPath = path.join(projectRoot, "frontend", "src-tauri", "tauri.conf.json");
+  if (await fs.pathExists(tauriConfPath)) {
+    const tauriConf = await fs.readJson(tauriConfPath);
+
+    // Determine sidecar binary name
+    const sidecarNames: Record<string, string> = {
+      python: "backend/main",
+      go: "backend/hello-gateorix-go",
+      dotnet: "backend/HelloGateorixCs",
+      cpp: "backend/hello-gateorix-cpp",
+      swift: "backend/hello-gateorix-swift",
+    };
+    const sidecarBin = sidecarNames[language] || `backend/${language}-sidecar`;
+
+    // Add to bundle.externalBin
+    if (!tauriConf.bundle) tauriConf.bundle = {};
+    if (!tauriConf.bundle.externalBin) tauriConf.bundle.externalBin = [];
+    if (!tauriConf.bundle.externalBin.includes(sidecarBin)) {
+      tauriConf.bundle.externalBin.push(sidecarBin);
+    }
+
+    await fs.writeJson(tauriConfPath, tauriConf, { spaces: 2 });
+    console.log(`  ${chalk.green("✓")} Updated tauri.conf.json with sidecar: ${sidecarBin}`);
+  } else {
+    console.log(chalk.dim("  • No src-tauri found — skipping tauri.conf.json update"));
+  }
+
   // Print prerequisites
   const prereqs: Record<string, string> = {
     python: "Python ≥ 3.9 — pip install -r backend/requirements.txt",

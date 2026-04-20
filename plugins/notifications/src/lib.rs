@@ -5,6 +5,7 @@
 
 use gateorix_host_core::ipc::protocol::{IpcRequest, IpcResponse};
 use gateorix_host_core::plugins::Plugin;
+use notify_rust::Notification;
 use tracing::info;
 
 pub struct NotificationsPlugin;
@@ -26,11 +27,20 @@ impl NotificationsPlugin {
             None => return IpcResponse::error(&request.id, "missing 'body' in payload"),
         };
 
-        // Placeholder: actual implementation will use a platform notification crate
-        // (e.g. notify-rust on Linux, native APIs on macOS/Windows)
-        info!(title = %title, body = %body, "notification sent (stub)");
-
-        IpcResponse::ok(&request.id, serde_json::json!({ "sent": true }))
+        match Notification::new()
+            .summary(title)
+            .body(body)
+            .appname("Gateorix")
+            .show()
+        {
+            Ok(_) => {
+                info!(title = %title, body = %body, "notification sent");
+                IpcResponse::ok(&request.id, serde_json::json!({ "sent": true }))
+            }
+            Err(e) => {
+                IpcResponse::error(&request.id, format!("notification failed: {e}"))
+            }
+        }
     }
 }
 

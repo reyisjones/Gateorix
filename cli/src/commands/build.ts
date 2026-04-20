@@ -11,6 +11,7 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import fs from "fs-extra";
 import chalk from "chalk";
+import { quickDoctorCheck } from "./doctor.js";
 
 interface BuildOptions {
   release: boolean;
@@ -37,6 +38,10 @@ export async function buildCommand(options: BuildOptions): Promise<void> {
   }
 
   const config = await fs.readJson(configPath);
+
+  // Quick environment check (warns but does not block)
+  quickDoctorCheck();
+
   const mode = options.release ? "release" : "debug";
   console.log(chalk.bold(`\n  Building ${config.name || "Gateorix app"} (${mode})\n`));
 
