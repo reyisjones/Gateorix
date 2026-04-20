@@ -16,11 +16,11 @@ interface InitOptions {
 }
 
 const BACKEND_LANGUAGES: Record<string, string> = {
-  python: "hello-react-python",
-  go: "hello-react-go",
-  "c#": "hello-react-cs",
-  "f#": "hello-react-fs",
-  "c++": "hello-react-cpp",
+  python: "python",
+  go: "go",
+  "c#": "cs",
+  "f#": "fs",
+  "c++": "cpp",
 };
 
 const UI_FRAMEWORKS = ["react", "vue", "svelte", "solid", "vanilla"];
@@ -93,7 +93,8 @@ export async function initCommand(
     },
   ]);
 
-  const templateName = BACKEND_LANGUAGES[answers.language];
+  const langSlug = BACKEND_LANGUAGES[answers.language];
+  const templateName = `hello-${answers.ui}-${langSlug}`;
   const pkgRoot = findPackageRoot();
   const templateDir = path.join(pkgRoot, "examples", templateName);
 
@@ -121,7 +122,6 @@ export async function initCommand(
   });
 
   // Replace placeholder names
-  const oldName = templateName.replace("hello-", "");
   await replaceInDir(targetDir, templateName, name);
 
   // Update gateorix.config.json with actual project name
