@@ -26,7 +26,7 @@ program
   .name("gateorix")
   .alias("gx")
   .description("Gateorix CLI — build cross-platform desktop apps with web UI and native power\n  Alias: gx (e.g. gx init, gx dev, gx build)")
-  .version("0.2.0");
+  .version("0.3.0");
 
 program
   .command("init <name>")
