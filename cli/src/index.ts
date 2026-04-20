@@ -63,3 +63,5 @@ addCmd
   .action(addPluginCommand);
 
 program.parse();
+
+// [ci publish trigger] No-op comment to trigger publish workflow
