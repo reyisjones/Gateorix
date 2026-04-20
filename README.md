@@ -20,7 +20,7 @@ Gateorix is a lightweight desktop application framework built on [Tauri](https:/
 
 - **A web-based frontend** — use React, Vue, Svelte, or plain HTML/JS.
 - **A native host runtime** — window management, menus, system tray, file dialogs, notifications, and more.
-- **Backend language adapters** — write your business logic in Python, Go, C#, F#, or any language that compiles to a binary.
+- **Backend language adapters** — write your business logic in Python, Go, C#, F#, C++, or any language that compiles to a binary.
 - **A plugin system** — extend OS capabilities with first-party and custom plugins.
 - **A secure IPC bridge** — all communication between frontend, host, and backend is permission-checked and sandboxed.
 - **A VS Code extension** — IntelliSense, config validation, and integrated commands.
@@ -44,7 +44,7 @@ Think of it as the gateway between modern web UI and native desktop power.
 ┌──────▼──────────┐          ┌─────────▼──────────┐
 │   Host Core     │          │  Runtime Adapters  │
 │  (Rust/Tauri)   │          │  Python · Go · .NET│
-│  Windows, menus │          │  Sidecar processes │
+│  Windows, menus │          │  C++ · Any binary  │
 │  Tray, dialogs  │          │  stdio / HTTP IPC  │
 │  Logging, perms │          └────────────────────┘
 └──────┬──────────┘
@@ -106,7 +106,11 @@ gateorix/
 ├── vscode-extension/        # VS Code extension (IntelliSense, commands, diagnostics)
 ├── templates/               # Starter templates
 ├── examples/                # Example applications
-│   └── hello-react-python/  # Full demo: React + Python + Tauri
+│   ├── hello-react-python/  # Full demo: React + Python + Tauri
+│   ├── hello-react-go/      # Full demo: React + Go + Tauri
+│   ├── hello-react-cs/      # Full demo: React + C# + Tauri
+│   ├── hello-react-fs/      # Full demo: React + F# + Tauri
+│   └── hello-react-cpp/     # Full demo: React + C++ + Tauri
 └── docs/                    # Documentation
 ```
 
@@ -117,6 +121,7 @@ gateorix/
 | Python | ✅ Implemented | stdio / HTTP |
 | Go | ✅ Implemented | stdio / HTTP |
 | C# / F# (.NET) | ✅ Implemented | stdio / HTTP |
+| C++ | ✅ Implemented | stdio / HTTP |
 | Swift | 🟡 Planned (Phase 3) | stdio |
 
 ## How It Works
@@ -157,7 +162,7 @@ All IPC uses JSON messages with request/response and event patterns. Binary tran
 
 ## Current Status
 
-**Phase 1 (Foundation)** and **Phase 2 (Developer Experience)** are complete. The framework includes a working CLI, Tauri integration, three runtime adapter SDKs (Python, Go, .NET), structured logging, and a VS Code extension.
+**Phase 1 (Foundation)** and **Phase 2 (Developer Experience)** are complete. The framework includes a working CLI, Tauri integration, four runtime adapter SDKs (Python, Go, .NET, C++), structured logging, and a VS Code extension.
 
 **Phase 3 (Production Readiness)** is next — OS-native packaging, auto-update, code signing, and sidecar health monitoring.
 

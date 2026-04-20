@@ -9,7 +9,8 @@
     "directory": "cli"
   },
   "bin": {
-    "gateorix": "dist/index.js"
+    "gateorix": "dist/index.js",
+    "gx": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.0",
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0"
   },

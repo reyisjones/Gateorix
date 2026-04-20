@@ -102,10 +102,36 @@ export async function devCommand(): Promise<void> {
       args = [entryFile, "--http"];
     } else if (runtimeType === "go") {
       cmd = "go";
-      args = ["run", entryFile];
-    } else if (runtimeType === "dotnet") {
+      args = ["run", ".", "--http"];
+    } else if (runtimeType === "dotnet" || runtimeType === "csharp" || runtimeType === "fsharp") {
       cmd = "dotnet";
       args = ["run"];
+    } else if (runtimeType === "cpp") {
+      // Look for the built binary in common CMake output dirs
+      const buildDir = path.join(backendDir, "build");
+      const binaryName = process.platform === "win32" ? "hello-gateorix-cpp.exe" : "hello-gateorix-cpp";
+      const searchDirs = [
+        path.join(buildDir, "Debug"),
+        path.join(buildDir, "Release"),
+        buildDir,
+      ];
+      let binaryPath = "";
+      for (const d of searchDirs) {
+        const candidate = path.join(d, binaryName);
+        if (fs.existsSync(candidate)) {
+          binaryPath = candidate;
+          break;
+        }
+      }
+      if (binaryPath) {
+        cmd = binaryPath;
+        args = [];
+      } else {
+        console.log(`  ${chalk.yellow("!")} C++ binary not found. Build with CMake first:`);
+        console.log(chalk.dim(`    cd backend && cmake -B build && cmake --build build`));
+        cmd = binaryName;
+        args = [];
+      }
     } else {
       cmd = runtimeType;
       args = [entryFile];

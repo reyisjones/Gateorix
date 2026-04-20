@@ -24,8 +24,9 @@ const program = new Command();
 
 program
   .name("gateorix")
-  .description("Gateorix CLI — build cross-platform desktop apps with web UI and native power")
-  .version("0.1.0");
+  .alias("gx")
+  .description("Gateorix CLI — build cross-platform desktop apps with web UI and native power\n  Alias: gx (e.g. gx init, gx dev, gx build)")
+  .version("0.1.2");
 
 program
   .command("init <name>")
@@ -53,7 +54,7 @@ const addCmd = program.command("add").description("Add a runtime adapter or plug
 
 addCmd
   .command("runtime <language>")
-  .description("Add a runtime adapter (python, go, dotnet, swift)")
+  .description("Add a runtime adapter (python, go, dotnet, swift, cpp)")
   .action(addRuntimeCommand);
 
 addCmd

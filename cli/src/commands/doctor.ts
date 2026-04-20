@@ -100,12 +100,42 @@ export async function doctorCommand(): Promise<void> {
     runCheck("npm", "npm --version", "9.0.0"),
   ];
 
-  // Try python3 first, then python (Windows)
+  // Python — try python3 first, then python (Windows)
   let pythonCheck = runCheck("Python", "python3 --version", "3.9.0");
   if (pythonCheck.status === "fail") {
     pythonCheck = runCheck("Python", "python --version", "3.9.0");
   }
   toolchecks.push(pythonCheck);
+
+  // Go
+  const goCheck = runCheck("Go", "go version", "1.21.0");
+  toolchecks.push(goCheck);
+
+  // .NET SDK
+  const dotnetCheck = runCheck(".NET SDK", "dotnet --version", "8.0.0");
+  toolchecks.push(dotnetCheck);
+
+  // C++ compiler
+  let cppCheck: CheckResult;
+  if (process.platform === "win32") {
+    cppCheck = runCheck("C++ Compiler (cl)", "cl 2>&1", undefined);
+    if (cppCheck.status === "fail") {
+      cppCheck = runCheck("C++ Compiler (g++)", "g++ --version");
+      if (cppCheck.status === "fail") {
+        cppCheck.hint = "Install Visual Studio Build Tools or MinGW";
+      }
+    }
+  } else {
+    cppCheck = runCheck("C++ Compiler (g++)", "g++ --version");
+    if (cppCheck.status === "fail") {
+      cppCheck = runCheck("C++ Compiler (clang++)", "clang++ --version");
+    }
+  }
+  toolchecks.push(cppCheck);
+
+  // CMake
+  const cmakeCheck = runCheck("CMake", "cmake --version", "3.16.0");
+  toolchecks.push(cmakeCheck);
 
   // Optional tools
   const tauriCheck = runCheck("Tauri CLI", "npx tauri --version");
@@ -115,6 +145,27 @@ export async function doctorCommand(): Promise<void> {
 
   const gitCheck = runCheck("Git", "git --version");
   toolchecks.push(gitCheck);
+
+  // WebView2 (Windows only)
+  if (process.platform === "win32") {
+    const webview2Check = runCheck(
+      "WebView2",
+      'reg query "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" /v pv 2>nul',
+    );
+    if (webview2Check.status === "fail") {
+      webview2Check.hint = "Install WebView2 Runtime from https://developer.microsoft.com/en-us/microsoft-edge/webview2/";
+    }
+    toolchecks.push(webview2Check);
+  }
+
+  // Xcode CLT (macOS only)
+  if (process.platform === "darwin") {
+    const xcodeCheck = runCheck("Xcode CLT", "xcode-select -p");
+    if (xcodeCheck.status === "fail") {
+      xcodeCheck.hint = "Run: xcode-select --install";
+    }
+    toolchecks.push(xcodeCheck);
+  }
 
   for (const r of toolchecks) {
     const hint = r.hint ? chalk.dim(` (${r.hint})`) : "";
