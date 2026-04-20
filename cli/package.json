@@ -1,6 +1,6 @@
 {
   "name": "@gateorixjs/cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Gateorix CLI — scaffold, develop, and build Gateorix desktop applications",
   "license": "MIT",
   "repository": {
@@ -12,11 +12,18 @@
     "gateorix": "dist/index.js",
     "gx": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint src/",
-    "test": "echo \"Tests not yet configured\""
+    "test": "echo \"Tests not yet configured\"",
+    "sync-templates": "node scripts/sync-templates.mjs",
+    "prepack": "npm run sync-templates && npm run build"
   },
   "dependencies": {
     "chalk": "^4.1.2",

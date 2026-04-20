@@ -25,18 +25,29 @@ const BACKEND_LANGUAGES: Record<string, string> = {
 
 const UI_FRAMEWORKS = ["react", "vue", "svelte", "solid", "vanilla"];
 
-/** Walk up from __dirname to find the package root (where examples/ lives). */
-function findPackageRoot(): string {
-  // When installed globally, templates ship alongside the CLI.
-  // During dev they sit in the repo root.
-  let dir = path.resolve(__dirname, "..");
+/**
+ * Resolve the directory containing the template `hello-*` folders.
+ *
+ * Priority:
+ *   1. `<cli-package>/templates/` — bundled with the published npm package.
+ *   2. `<repo-root>/examples/`    — local dev mode inside the monorepo.
+ */
+function findTemplatesDir(): string {
+  // dist/commands/init.js -> dist -> cli
+  const cliRoot = path.resolve(__dirname, "..", "..");
+  const bundled = path.join(cliRoot, "templates");
+  if (fs.existsSync(bundled)) return bundled;
+
+  // Dev fallback: walk up to find repo root containing `examples/`.
+  let dir = cliRoot;
   for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, "examples"))) return dir;
+    const candidate = path.join(dir, "examples");
+    if (fs.existsSync(candidate)) return candidate;
     const parent = path.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
-  return path.resolve(__dirname, "..");
+  return bundled; // last-resort path for error message
 }
 
 /** Replace placeholder project names inside every text file in a directory. */
@@ -95,14 +106,15 @@ export async function initCommand(
 
   const langSlug = BACKEND_LANGUAGES[answers.language];
   const templateName = `hello-${answers.ui}-${langSlug}`;
-  const pkgRoot = findPackageRoot();
-  const templateDir = path.join(pkgRoot, "examples", templateName);
+  const templatesDir = findTemplatesDir();
+  const templateDir = path.join(templatesDir, templateName);
 
   if (!(await fs.pathExists(templateDir))) {
-    console.error(chalk.red(`\n  Template not found: examples/${templateName}`));
+    console.error(chalk.red(`\n  Template not found: ${templateName}`));
+    console.error(chalk.dim(`  Searched in: ${templatesDir}`));
     console.error(chalk.dim("  Available templates:"));
     try {
-      const dirs = await fs.readdir(path.join(pkgRoot, "examples"));
+      const dirs = await fs.readdir(templatesDir);
       for (const d of dirs) console.error(chalk.dim(`    • ${d}`));
     } catch { /* ignore */ }
     process.exit(1);
