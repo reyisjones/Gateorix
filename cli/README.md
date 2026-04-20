@@ -13,8 +13,8 @@ npm install -g @gateorixjs/cli
 This installs **two binaries** — `gateorix` and its short alias `gx`. They are identical; use whichever you prefer.
 
 ```bash
-gateorix --version   # 0.3.1
-gx --version         # 0.3.1 (same binary)
+gateorix --version   # 0.3.2
+gx --version         # 0.3.2 (same binary)
 ```
 
 ## Commands

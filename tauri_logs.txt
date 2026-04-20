@@ -1,0 +1,25 @@
+                                                        
+  [tauri] error: failed to run custom build command for `hello-gateorix-go v0.1.0 (C:\Dev\Orbis\src\frontend\src-tauri)`
+  [tauri] Caused by:
+  [tauri]   process didn't exit successfully: `C:\Dev\Orbis\src\frontend\src-tauri\target\debug\build\hello-gateorix-go-16eb15a131e2e87a\build-script-build` (exit code: 1)
+  [tauri]   --- stdout
+  [tauri]   cargo:rerun-if-env-changed=TAURI_CONFIG
+  [tauri]   cargo:rustc-check-cfg=cfg(desktop)
+  [tauri]   cargo:rustc-cfg=desktop
+  [tauri]   cargo:rustc-check-cfg=cfg(mobile)
+  [tauri]   cargo:rerun-if-changed=C:\Dev\Orbis\src\frontend\src-tauri\tauri.conf.json
+  [tauri]   cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=hello_go
+  [tauri]   cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=com_gateorix
+  [tauri]   cargo:rustc-check-cfg=cfg(dev)
+  [tauri]   cargo:rustc-cfg=dev
+  [tauri]   cargo:PERMISSION_FILES_PATH=C:\Dev\Orbis\src\frontend\src-tauri\target\debug\build\hello-gateorix-go-85474f93dcd0da16\out\app-manifest\__app__-permission-files
+  [tauri]   cargo:rerun-if-changed=capabilities
+  [tauri]   cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+  [tauri]   cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=x86_64-pc-windows-msvc
+  [tauri]   package.metadata does not exist
+  [tauri]   `icons/icon.ico` not found; required for generating a Windows Resource file during tauri-build
+  [tauri] warning: build failed, waiting for other jobs to finish...
+  [tauri]     Building [=======================> ] 405/417: webvi...
+  [tauri]     Building [=======================> ] 406/417: webvi...
+  [tauri]                                                             
+  [tauri] exited with code 101
