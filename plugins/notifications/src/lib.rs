@@ -37,9 +37,7 @@ impl NotificationsPlugin {
                 info!(title = %title, body = %body, "notification sent");
                 IpcResponse::ok(&request.id, serde_json::json!({ "sent": true }))
             }
-            Err(e) => {
-                IpcResponse::error(&request.id, format!("notification failed: {e}"))
-            }
+            Err(e) => IpcResponse::error(&request.id, format!("notification failed: {e}")),
         }
     }
 }

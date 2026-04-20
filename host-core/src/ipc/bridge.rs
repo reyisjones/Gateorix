@@ -3,9 +3,9 @@
 //! Routes incoming IPC requests to the appropriate handler —
 //! either a host-core plugin or a runtime adapter.
 
+use crate::ipc::protocol::{IpcRequest, IpcResponse};
 use std::collections::HashMap;
 use tracing::{debug, warn};
-use crate::ipc::protocol::{IpcRequest, IpcResponse};
 
 /// Handler function type for IPC channels.
 pub type ChannelHandler = Box<dyn Fn(&IpcRequest) -> IpcResponse + Send + Sync>;

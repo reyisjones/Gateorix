@@ -36,13 +36,12 @@ impl Default for LogConfig {
 /// init(LogConfig::default());
 /// ```
 pub fn init(config: LogConfig) {
-    let env_filter = EnvFilter::try_from_env("GATEORIX_LOG")
-        .unwrap_or_else(|_| {
-            EnvFilter::new(format!(
-                "gateorix={level},gateorix_host_core={level},{level}",
-                level = config.level
-            ))
-        });
+    let env_filter = EnvFilter::try_from_env("GATEORIX_LOG").unwrap_or_else(|_| {
+        EnvFilter::new(format!(
+            "gateorix={level},gateorix_host_core={level},{level}",
+            level = config.level
+        ))
+    });
 
     if config.json {
         fmt()
@@ -54,9 +53,6 @@ pub fn init(config: LogConfig) {
             .with_line_number(true)
             .init();
     } else {
-        fmt()
-            .with_env_filter(env_filter)
-            .with_target(true)
-            .init();
+        fmt().with_env_filter(env_filter).with_target(true).init();
     }
 }

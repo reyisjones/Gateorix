@@ -74,7 +74,10 @@ mod tests {
 
     #[test]
     fn request_serialization_roundtrip() {
-        let req = IpcRequest::new("filesystem.readText", serde_json::json!({"path": "./data/notes.txt"}));
+        let req = IpcRequest::new(
+            "filesystem.readText",
+            serde_json::json!({"path": "./data/notes.txt"}),
+        );
         let json = serde_json::to_string(&req).unwrap();
         let parsed: IpcRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.channel, "filesystem.readText");

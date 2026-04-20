@@ -145,10 +145,7 @@ impl RuntimeAdapter for StdioProcess {
     }
 
     fn send(&self, message: &str) -> Result<String, AdapterError> {
-        let child = self
-            .child
-            .as_ref()
-            .ok_or(AdapterError::NotRunning)?;
+        let child = self.child.as_ref().ok_or(AdapterError::NotRunning)?;
 
         // Placeholder: the production implementation will use async I/O
         // with tokio channels for concurrent read/write on the sidecar's

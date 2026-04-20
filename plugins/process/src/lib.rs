@@ -25,11 +25,7 @@ impl ProcessPlugin {
             .payload
             .get("args")
             .and_then(|a| a.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str())
-                    .collect()
-            })
+            .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
             .unwrap_or_default();
 
         match Command::new(program).args(&args).output() {
@@ -65,10 +61,7 @@ impl Plugin for ProcessPlugin {
         let action = request.channel.strip_prefix("process.").unwrap_or("");
         match action {
             "execute" => self.execute(request),
-            _ => IpcResponse::error(
-                &request.id,
-                format!("unknown process action: {}", action),
-            ),
+            _ => IpcResponse::error(&request.id, format!("unknown process action: {}", action)),
         }
     }
 

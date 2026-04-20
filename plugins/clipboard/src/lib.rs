@@ -3,9 +3,9 @@
 //! Provides read and write access to the system clipboard.
 //! Requires "clipboard" permission in the app manifest.
 
+use arboard::Clipboard;
 use gateorix_host_core::ipc::protocol::{IpcRequest, IpcResponse};
 use gateorix_host_core::plugins::Plugin;
-use arboard::Clipboard;
 use tracing::info;
 
 pub struct ClipboardPlugin;
@@ -57,10 +57,7 @@ impl Plugin for ClipboardPlugin {
         match action {
             "readText" => self.read_text(request),
             "writeText" => self.write_text(request),
-            _ => IpcResponse::error(
-                &request.id,
-                format!("unknown clipboard action: {}", action),
-            ),
+            _ => IpcResponse::error(&request.id, format!("unknown clipboard action: {}", action)),
         }
     }
 
