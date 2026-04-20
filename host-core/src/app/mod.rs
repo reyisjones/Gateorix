@@ -4,7 +4,7 @@
 //! of the Gateorix host process.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Top-level application manifest loaded from `gateorix.config.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,7 +84,7 @@ fn default_height() -> u32 {
 }
 
 /// Load the application manifest from the given project directory.
-pub fn load_manifest(project_dir: &PathBuf) -> Result<AppManifest, Box<dyn std::error::Error>> {
+pub fn load_manifest(project_dir: &Path) -> Result<AppManifest, Box<dyn std::error::Error>> {
     let config_path = project_dir.join("gateorix.config.json");
     let content = std::fs::read_to_string(&config_path)?;
     let manifest: AppManifest = serde_json::from_str(&content)?;
