@@ -1,0 +1,26 @@
+{
+  "name": "hello-react-cs",
+  "version": "0.1.0",
+  "frontend": {
+    "devUrl": "http://localhost:5173",
+    "entry": "dist/index.html"
+  },
+  "runtime": {
+    "type": "dotnet",
+    "entry": "backend/Program.cs"
+  },
+  "permissions": {
+    "filesystem": ["./data"],
+    "process": false,
+    "notifications": true,
+    "clipboard": true
+  },
+  "windows": [
+    {
+      "id": "main",
+      "title": "Hello Gateorix — C#",
+      "width": 1200,
+      "height": 800
+    }
+  ]
+}
