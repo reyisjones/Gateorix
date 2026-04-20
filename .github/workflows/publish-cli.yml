@@ -1,0 +1,60 @@
+name: Publish CLI to npm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cli/**"
+      - ".github/workflows/publish-cli.yml"
+
+jobs:
+  publish:
+    name: Build & Publish @gateorixjs/cli
+    runs-on: ubuntu-latest
+
+    # Only publish when the version in package.json actually changed
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        working-directory: cli
+        run: npm ci
+
+      - name: Build
+        working-directory: cli
+        run: npm run build
+
+      - name: Check if version changed
+        id: version-check
+        working-directory: cli
+        run: |
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view @gateorixjs/cli version 2>/dev/null || echo "0.0.0")
+          echo "local=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "published=$PUBLISHED_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$LOCAL_VERSION" != "$PUBLISHED_VERSION" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Version changed: $PUBLISHED_VERSION -> $LOCAL_VERSION"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged ($LOCAL_VERSION), skipping publish"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.changed == 'true'
+        working-directory: cli
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          echo "### Published @gateorixjs/cli@${{ steps.version-check.outputs.local }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Previous version: ${{ steps.version-check.outputs.published }}" >> "$GITHUB_STEP_SUMMARY"

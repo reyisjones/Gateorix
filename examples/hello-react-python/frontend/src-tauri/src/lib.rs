@@ -7,6 +7,9 @@ use tauri::{Manager, State};
 /// Holds the Python sidecar process so we can send/receive messages.
 struct Sidecar(Mutex<Option<Child>>);
 
+/// Path to the app's settings.json file (theme, profile, etc.)
+struct SettingsPath(PathBuf);
+
 /// Tauri command: invoke the Python backend via stdio IPC.
 /// The frontend calls this instead of the HTTP bridge.
 #[tauri::command]
@@ -48,12 +51,86 @@ fn invoke_backend(
     Ok(response)
 }
 
+/// Read the settings.json file and return its contents.
+/// Returns an empty JSON object `{}` if the file doesn't exist yet.
+#[tauri::command]
+fn get_settings(settings_path: State<'_, SettingsPath>) -> Result<serde_json::Value, String> {
+    let path = &settings_path.0;
+    if !path.exists() {
+        return Ok(serde_json::json!({}));
+    }
+    let contents = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&contents).map_err(|e| e.to_string())
+}
+
+/// Write (merge) settings to the settings.json file.
+/// Accepts a partial JSON object — merges it with existing settings.
+#[tauri::command]
+fn save_settings(
+    data: serde_json::Value,
+    settings_path: State<'_, SettingsPath>,
+) -> Result<(), String> {
+    let path = &settings_path.0;
+
+    // Read existing settings or start with empty object
+    let mut settings: serde_json::Map<String, serde_json::Value> = if path.exists() {
+        let contents = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+        serde_json::from_str(&contents).unwrap_or_default()
+    } else {
+        serde_json::Map::new()
+    };
+
+    // Merge incoming data
+    if let serde_json::Value::Object(incoming) = data {
+        for (key, value) in incoming {
+            settings.insert(key, value);
+        }
+    }
+
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    let json = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    std::fs::write(path, json).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Login with hardcoded credentials (demo only).
+/// Returns the display name on success.
+#[tauri::command]
+fn login(username: String, password: String) -> Result<String, String> {
+    // Hardcoded happy-path credentials for demo
+    if username == "admin" && password == "gateorix" {
+        Ok("Admin".to_string())
+    } else if username == "demo" && password == "demo" {
+        Ok("Demo User".to_string())
+    } else {
+        Err("Invalid username or password".to_string())
+    }
+}
+
+/// Logout — clears session. Currently a no-op on the backend since
+/// session state is managed on the frontend. Included for completeness
+/// and to demonstrate the Tauri command round-trip.
+#[tauri::command]
+fn logout() -> Result<(), String> {
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(Sidecar(Mutex::new(None)))
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![invoke_backend])
+        .invoke_handler(tauri::generate_handler![
+            invoke_backend,
+            get_settings,
+            save_settings,
+            login,
+            logout,
+        ])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -62,6 +139,15 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // Set up settings.json path in the app's config directory
+            let config_dir = app
+                .path()
+                .app_config_dir()
+                .map_err(|e| format!("Cannot resolve config dir: {}", e))?;
+            let settings_file = config_dir.join("settings.json");
+            log::info!("Settings file: {:?}", settings_file);
+            app.manage(SettingsPath(settings_file));
 
             // Resolve backend path relative to the Cargo manifest dir (src-tauri/)
             // so it works regardless of the exe's working directory.

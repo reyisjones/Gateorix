@@ -20,8 +20,8 @@ Gateorix development is organized into phases. Each phase builds on the previous
 - [x] Filesystem, process, notifications, clipboard plugin stubs
 - [x] Starter templates (react-python, vanilla)
 - [x] Documentation: architecture, security model, adapter protocol
-- [ ] Integration: wire host core to a real Tauri webview
-- [ ] End-to-end: frontend → bridge → host → Python sidecar round trip
+- [x] Integration: wire host core to a real Tauri webview
+- [x] End-to-end: frontend → bridge → host → Python sidecar round trip
 
 ---
 
@@ -29,6 +29,14 @@ Gateorix development is organized into phases. Each phase builds on the previous
 
 **Goal:** Make the framework usable for real projects with a smooth development workflow.
 
+- [x] HTTP dev bridge for browser-based development (Python backend, port 3001)
+- [x] Tauri webview integration with native IPC (invoke_backend command)
+- [x] App shell template — navbar, page routing, responsive layout
+- [x] Dark / light theme toggle with disk persistence (settings.json)
+- [x] Profile page — display name and email saved via Tauri commands
+- [x] Login / logout flow with Rust-side credential validation
+- [x] Dual IPC mode — Tauri native or HTTP bridge fallback
+- [x] CSS custom properties for theming
 - [ ] `gateorix dev` — start frontend + host + sidecar with hot reload
 - [ ] `gateorix build` — produce a bundled app with sidecar
 - [ ] `gateorix doctor` — full environment checks

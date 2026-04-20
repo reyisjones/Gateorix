@@ -57,7 +57,7 @@ Think of it as the gateway between modern web UI and native desktop power.
 
 ```bash
 # Install the CLI
-npm install -g @gateorix/cli
+npm install -g @gateorixjs/cli
 
 # Create a new project
 gateorix init my-app --template react-python

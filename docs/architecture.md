@@ -95,6 +95,24 @@ This is what makes Gateorix language-agnostic. The host core:
 
 The sidecar process uses a language-specific SDK (e.g. `gateorix` Python package) to register command handlers and run the message loop.
 
+**Dual IPC modes:** In development, the frontend can fall back to an HTTP bridge (port 3001) for browser-based iteration without compiling the Rust host. In production (Tauri webview), all IPC goes through native invoke commands.
+
+## 5. Application Shell Layer
+
+The hello-react-python example demonstrates the canonical app shell pattern that serves as a template for generated projects:
+
+| Component | Purpose |
+|---|---|
+| `Navbar` | Logo, theme toggle, profile button, login/logout |
+| `HomePage` | Greet demo — end-to-end IPC round trip |
+| `ProfilePage` | Display name and email, persisted to `settings.json` via Tauri |
+| `LoginPage` | Form → Rust `login` command with hardcoded demo credentials |
+| `Theme` | Dark/light toggle using CSS custom properties, persisted to settings |
+
+**Settings storage:** A `settings.json` file in the platform config directory (`app.path().app_config_dir()`) stores theme preference, profile data, and other app state. The Rust `get_settings` and `save_settings` commands handle read/merge-write operations.
+
+**Authentication:** The `login` command validates credentials on the Rust side and returns a display name. The `logout` command is a no-op on the backend since session state lives in the frontend.
+
 ## 5. Plugin Layer
 
 Plugins expose OS capabilities to the bridge. Each plugin:
