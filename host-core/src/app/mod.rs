@@ -4,7 +4,7 @@
 //! of the Gateorix host process.
 
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Top-level application manifest loaded from `gateorix.config.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
