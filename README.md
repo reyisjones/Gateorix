@@ -31,21 +31,21 @@ Think of it as the gateway between modern web UI and native desktop power.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  Frontend Layer                  │
-│         (React / Vue / Svelte / HTML+JS)         │
+│                  Frontend Layer                 │
+│         (React / Vue / Svelte / HTML+JS)        │
 └──────────────────────┬──────────────────────────┘
                        │  Gateorix Bridge API
                        │  (Tauri native or HTTP fallback)
 ┌──────────────────────▼──────────────────────────┐
-│                  Bridge Layer                    │
-│       (Secure IPC · JSON messages · events)      │
+│                  Bridge Layer                   │
+│       (Secure IPC · JSON messages · events)     │
 └──────┬───────────────────────────────┬──────────┘
        │                               │
 ┌──────▼──────────┐          ┌─────────▼──────────┐
-│   Host Core     │          │  Runtime Adapters   │
-│  (Rust/Tauri)   │          │  Python · Go · .NET │
-│  Windows, menus │          │  Sidecar processes  │
-│  Tray, dialogs  │          │  stdio / HTTP IPC   │
+│   Host Core     │          │  Runtime Adapters  │
+│  (Rust/Tauri)   │          │  Python · Go · .NET│
+│  Windows, menus │          │  Sidecar processes │
+│  Tray, dialogs  │          │  stdio / HTTP IPC  │
 │  Logging, perms │          └────────────────────┘
 └──────┬──────────┘
        │
