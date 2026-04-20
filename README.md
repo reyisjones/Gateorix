@@ -7,8 +7,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gateorix/gateorix/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://github.com/gateorix/gateorix/actions"><img src="https://img.shields.io/github/actions/workflow/status/gateorix/gateorix/ci.yml?branch=main" alt="CI"></a>
+  <a href="https://github.com/reyisjones/Gateorix/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://github.com/reyisjones/Gateorix/actions"><img src="https://img.shields.io/github/actions/workflow/status/reyisjones/Gateorix/ci.yml?branch=main" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/@gateorixjs/cli"><img src="https://img.shields.io/npm/v/@gateorixjs/cli" alt="npm"></a>
 </p>
 
 ---
@@ -18,10 +19,11 @@
 Gateorix is a lightweight desktop application framework built on [Tauri](https://tauri.app) and Rust. It gives you:
 
 - **A web-based frontend** — use React, Vue, Svelte, or plain HTML/JS.
-- **A native host runtime** — window management, menus, file access, notifications, and more.
-- **Backend language adapters** — write your business logic in Python, Go, C#, F#, Swift, or any language that compiles to a binary or runs as a process.
+- **A native host runtime** — window management, menus, system tray, file dialogs, notifications, and more.
+- **Backend language adapters** — write your business logic in Python, Go, C#, F#, or any language that compiles to a binary.
 - **A plugin system** — extend OS capabilities with first-party and custom plugins.
 - **A secure IPC bridge** — all communication between frontend, host, and backend is permission-checked and sandboxed.
+- **A VS Code extension** — IntelliSense, config validation, and integrated commands.
 
 Think of it as the gateway between modern web UI and native desktop power.
 
@@ -29,21 +31,23 @@ Think of it as the gateway between modern web UI and native desktop power.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  Frontend Layer                 │
-│         (React / Vue / Svelte / HTML+JS)        │
+│                  Frontend Layer                  │
+│         (React / Vue / Svelte / HTML+JS)         │
 └──────────────────────┬──────────────────────────┘
                        │  Gateorix Bridge API
+                       │  (Tauri native or HTTP fallback)
 ┌──────────────────────▼──────────────────────────┐
-│                  Bridge Layer                   │
-│       (Secure IPC · JSON messages · events)     │
+│                  Bridge Layer                    │
+│       (Secure IPC · JSON messages · events)      │
 └──────┬───────────────────────────────┬──────────┘
        │                               │
 ┌──────▼──────────┐          ┌─────────▼──────────┐
-│   Host Core     │          │  Runtime Adapters  │
-│  (Rust/Tauri)   │          │  (Python, Go, C#,  │
-│  Windows, menus │          │   F#, Swift, …)    │
-│  FS, tray, etc. │          │  Sidecar processes │
-└──────┬──────────┘          └────────────────────┘
+│   Host Core     │          │  Runtime Adapters   │
+│  (Rust/Tauri)   │          │  Python · Go · .NET │
+│  Windows, menus │          │  Sidecar processes  │
+│  Tray, dialogs  │          │  stdio / HTTP IPC   │
+│  Logging, perms │          └────────────────────┘
+└──────┬──────────┘
        │
 ┌──────▼──────────┐
 │  Plugin Layer   │
@@ -85,42 +89,64 @@ gateorix build
 
 ```
 gateorix/
-├── cli/                  # CLI tool (TypeScript)
-├── host-core/            # Native host runtime (Rust)
-├── sdk/                  # Language SDKs and bridge libraries
-│   ├── js/               # JavaScript/TypeScript bridge
-│   ├── python/           # Python adapter SDK
-│   ├── dotnet/           # .NET adapter SDK
-│   ├── go/               # Go adapter SDK
-│   └── swift/            # Swift adapter SDK
-├── plugins/              # Host plugins
+├── cli/                     # CLI tool (TypeScript, published as @gateorixjs/cli)
+├── host-core/               # Native host runtime (Rust)
+│   └── src/logging.rs       # Structured logging (tracing + JSON)
+├── sdk/                     # Language SDKs and bridge libraries
+│   ├── js/                  # JavaScript/TypeScript bridge
+│   ├── python/              # Python adapter SDK
+│   ├── go/                  # Go adapter SDK (stdio + HTTP)
+│   ├── dotnet/              # .NET adapter SDK (stdio + ASP.NET Minimal API)
+│   └── swift/               # Swift adapter SDK (planned)
+├── plugins/                 # Host plugins
 │   ├── filesystem/
 │   ├── process/
 │   ├── notifications/
 │   └── clipboard/
-├── templates/            # Starter templates
-├── examples/             # Example applications
-└── docs/                 # Documentation
+├── vscode-extension/        # VS Code extension (IntelliSense, commands, diagnostics)
+├── templates/               # Starter templates
+├── examples/                # Example applications
+│   └── hello-react-python/  # Full demo: React + Python + Tauri
+└── docs/                    # Documentation
 ```
 
 ## Supported Backend Languages
 
 | Language | Adapter Status | IPC Method |
 |---|---|---|
-| Python | 🟢 v1 | stdio / HTTP |
-| Go | 🟡 Planned | stdio / HTTP |
-| C# / F# (.NET) | 🟡 Planned | stdio / HTTP |
-| Swift | 🟡 Planned | stdio |
-| Objective-C | 🟡 Planned | stdio |
+| Python | ✅ Implemented | stdio / HTTP |
+| Go | ✅ Implemented | stdio / HTTP |
+| C# / F# (.NET) | ✅ Implemented | stdio / HTTP |
+| Swift | 🟡 Planned (Phase 3) | stdio |
 
 ## How It Works
 
-1. **Frontend** renders in an embedded webview and communicates exclusively through the Gateorix bridge API.
-2. **Host Core** (Rust) manages the app lifecycle, windows, menus, system tray, and enforces the permission model.
-3. **Runtime Adapters** spawn backend processes (sidecars) in your chosen language. The host core relays IPC messages between the frontend and these processes.
+1. **Frontend** renders in an embedded webview (or browser during dev) and communicates through the Gateorix bridge API. Supports dual IPC mode — Tauri native when running as a desktop app, HTTP fallback for browser-based development.
+2. **Host Core** (Rust) manages the app lifecycle, windows, menus, system tray, file dialogs, and enforces the permission model. Includes structured logging with `tracing`.
+3. **Runtime Adapters** spawn backend processes (sidecars) in your chosen language. The host core relays IPC messages between the frontend and these processes via stdio or HTTP.
 4. **Plugins** expose OS capabilities (filesystem, clipboard, notifications) through a secure, permission-gated API.
 
-All IPC uses JSON messages with request/response and event patterns. Binary transport is planned for a future release.
+All IPC uses JSON messages with request/response and event patterns. Binary transport (MessagePack / Protocol Buffers) is planned for Phase 4.
+
+## Features
+
+### Desktop Shell
+- Window management — multi-window, resize, fullscreen, minimize, maximize
+- Application menus — File, View, Help with keyboard shortcuts
+- System tray — show/hide, quit
+- File dialogs — open file, save file, open folder
+- Dark / light theme toggle with disk persistence
+
+### Developer Experience
+- `gateorix dev` orchestrates frontend, backend, and Tauri processes
+- `gateorix build` produces native installers via Tauri
+- `gateorix doctor` validates your full toolchain and project config
+- VS Code extension with IntelliSense for `gateorix.config.json`
+- Structured logging with JSON output and env-based filtering
+
+### CI/CD
+- GitHub Actions CI for Rust (cross-platform) and CLI (TypeScript)
+- Automated npm publishing when CLI version changes
 
 ## Documentation
 
@@ -128,6 +154,12 @@ All IPC uses JSON messages with request/response and event patterns. Binary tran
 - [Security Model](docs/security.md)
 - [Adapter Protocol](docs/adapter-protocol.md)
 - [Roadmap](docs/roadmap.md)
+
+## Current Status
+
+**Phase 1 (Foundation)** and **Phase 2 (Developer Experience)** are complete. The framework includes a working CLI, Tauri integration, three runtime adapter SDKs (Python, Go, .NET), structured logging, and a VS Code extension.
+
+**Phase 3 (Production Readiness)** is next — OS-native packaging, auto-update, code signing, and sidecar health monitoring.
 
 ## Contributing
 
