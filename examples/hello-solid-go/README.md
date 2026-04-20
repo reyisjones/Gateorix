@@ -14,8 +14,8 @@ A complete desktop application example using a **React** frontend with a **Go** 
 
 ```
 ┌──────────────┐   JSON/stdio    ┌──────────────┐
-│  Tauri Shell  │ ◄────────────► │  Go Backend   │
-│  (Rust/WRY)  │   (sidecar)    │  (main.go)    │
+│  Tauri Shell │ ◄────────────►  │ Go Backend   │
+│  (Rust/WRY)  │   (sidecar)     │ (main.go)    │
 └──────┬───────┘                 └──────────────┘
        │ IPC
 ┌──────┴───────┐

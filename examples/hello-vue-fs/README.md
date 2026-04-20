@@ -14,7 +14,7 @@ A complete desktop application example using a **React** frontend with an **F#**
 
 ```
 ┌──────────────┐   JSON/stdio    ┌──────────────┐
-│  Tauri Shell  │ ◄────────────► │  F# Backend   │
+│  Tauri Shell │ ◄────────────► │  F# Backend   │
 │  (Rust/WRY)  │   (sidecar)    │  (.NET 8)     │
 └──────┬───────┘                 └──────────────┘
        │ IPC
