@@ -63,27 +63,33 @@ Think of it as the gateway between modern web UI and native desktop power.
 # Install the CLI
 npm install -g @gateorixjs/cli
 
-# Create a new project
-gateorix init my-app --template react-python
+# Create a new project (interactive prompts for backend & UI)
+gateorix init my-app
+# or use the short alias:
+gx init my-app
 
 # Start development
 cd my-app
-gateorix dev
+gx dev
 
 # Build for production
-gateorix build
+gx build
 ```
+
+> **Tip:** Every `gateorix` command has a `gx` alias — e.g. `gx init`, `gx dev`, `gx doctor`, `gx add runtime python`.
 
 ## CLI Commands
 
-| Command | Description |
-|---|---|
-| `gateorix init <name>` | Scaffold a new project from a template |
-| `gateorix dev` | Start the app in development mode with hot reload |
-| `gateorix build` | Build the app for production |
-| `gateorix doctor` | Check environment and dependencies |
-| `gateorix add runtime <lang>` | Add a runtime adapter (python, go, dotnet, swift) |
-| `gateorix add plugin <name>` | Add a plugin (filesystem, process, notifications, clipboard) |
+Use either `gateorix` or the shorter `gx` alias — both are installed when you run `npm install -g @gateorixjs/cli`.
+
+| Command | Alias | Description |
+|---|---|---|
+| `gateorix init <name>` | `gx init <name>` | Scaffold a new project (interactive prompts for backend & UI) |
+| `gateorix dev` | `gx dev` | Start the app in development mode with hot reload |
+| `gateorix build` | `gx build` | Build the app for production |
+| `gateorix doctor` | `gx doctor` | Check environment and dependencies |
+| `gateorix add runtime <lang>` | `gx add runtime <lang>` | Add a runtime adapter (python, go, dotnet, swift, cpp) |
+| `gateorix add plugin <name>` | `gx add plugin <name>` | Add a plugin (filesystem, process, notifications, clipboard) |
 
 ## Project Structure
 
@@ -105,14 +111,24 @@ gateorix/
 │   └── clipboard/
 ├── vscode-extension/        # VS Code extension (IntelliSense, commands, diagnostics)
 ├── templates/               # Starter templates
-├── examples/                # Example applications
-│   ├── hello-react-python/  # Full demo: React + Python + Tauri
-│   ├── hello-react-go/      # Full demo: React + Go + Tauri
-│   ├── hello-react-cs/      # Full demo: React + C# + Tauri
-│   ├── hello-react-fs/      # Full demo: React + F# + Tauri
-│   └── hello-react-cpp/     # Full demo: React + C++ + Tauri
+├── examples/                # Example applications (25 combinations: 5 UIs × 5 backends)
+│   ├── hello-react-*/       # React + python/go/cs/fs/cpp
+│   ├── hello-vue-*/         # Vue 3 + python/go/cs/fs/cpp
+│   ├── hello-svelte-*/      # Svelte + python/go/cs/fs/cpp
+│   ├── hello-solid-*/       # SolidJS + python/go/cs/fs/cpp
+│   └── hello-vanilla-*/     # Plain HTML/TS + python/go/cs/fs/cpp
 └── docs/                    # Documentation
 ```
+
+## Supported UI Frameworks
+
+| UI        | Template prefix         | Status      |
+|-----------|-------------------------|-------------|
+| React     | `hello-react-*`         | ✅ All 5 backends |
+| Vue 3     | `hello-vue-*`           | ✅ All 5 backends |
+| Svelte    | `hello-svelte-*`        | ✅ All 5 backends |
+| SolidJS   | `hello-solid-*`         | ✅ All 5 backends |
+| Vanilla   | `hello-vanilla-*`       | ✅ All 5 backends |
 
 ## Supported Backend Languages
 
@@ -122,7 +138,7 @@ gateorix/
 | Go | ✅ Implemented | stdio / HTTP |
 | C# / F# (.NET) | ✅ Implemented | stdio / HTTP |
 | C++ | ✅ Implemented | stdio / HTTP |
-| Swift | 🟡 Planned (Phase 3) | stdio |
+| Swift | ✅ Implemented (skeleton) | stdio |
 
 ## How It Works
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello Gateorix — Vanilla</title>
+  </head>
+  <body>
+    <main class="main-content">
+      <h1 class="page-title">Hello Gateorix</h1>
+      <p class="page-subtitle">Plain HTML/TS frontend talking to the Gateorix runtime.</p>
+      <p class="ipc-badge" id="ipc-badge">IPC mode: detecting…</p>
+
+      <div class="input-row">
+        <input id="name" class="form-input" type="text" placeholder="Your name" />
+        <button id="greet-btn" class="btn btn-primary">Greet</button>
+      </div>
+
+      <p id="error" class="error-msg" hidden></p>
+      <p id="result" class="greeting-result" hidden></p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

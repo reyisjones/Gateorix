@@ -1,0 +1,111 @@
+:root {
+  --bg: #ffffff;
+  --text: #111827;
+  --text-secondary: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --border: #e5e7eb;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --success: #059669;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --text: #f9fafb;
+    --text-secondary: #9ca3af;
+    --accent: #3b82f6;
+    --border: #374151;
+    --error: #f87171;
+    --error-bg: #1c1917;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.main-content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  margin: 0.5rem 0 1rem;
+}
+
+.ipc-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.error-msg {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--error-bg);
+  color: var(--error);
+  border-radius: 6px;
+  border: 1px solid var(--error);
+}
+
+.greeting-result {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--success);
+  border-radius: 6px;
+  color: var(--success);
+  font-weight: 500;
+}

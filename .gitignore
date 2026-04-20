@@ -51,3 +51,6 @@ release/
 *.AppImage
 *.deb
 *.rpm
+
+# Internal scaffolding (used by repo maintainers to generate examples)
+.scaffold/
