@@ -130,6 +130,18 @@ gateorix/
 | SolidJS   | `hello-solid-*`         | ✅ All 5 backends |
 | Vanilla   | `hello-vanilla-*`       | ✅ All 5 backends |
 
+### Example matrix (25 combinations)
+
+Every UI × backend combination ships as a runnable example. `gx init <name>` scaffolds from whichever one you pick interactively.
+
+| UI ↓ / Backend → | Python | Go | C# | F# | C++ |
+|---|---|---|---|---|---|
+| **React**   | [hello-react-python](examples/hello-react-python)   | [hello-react-go](examples/hello-react-go)   | [hello-react-cs](examples/hello-react-cs)   | [hello-react-fs](examples/hello-react-fs)   | [hello-react-cpp](examples/hello-react-cpp)   |
+| **Vue 3**   | [hello-vue-python](examples/hello-vue-python)       | [hello-vue-go](examples/hello-vue-go)       | [hello-vue-cs](examples/hello-vue-cs)       | [hello-vue-fs](examples/hello-vue-fs)       | [hello-vue-cpp](examples/hello-vue-cpp)       |
+| **Svelte**  | [hello-svelte-python](examples/hello-svelte-python) | [hello-svelte-go](examples/hello-svelte-go) | [hello-svelte-cs](examples/hello-svelte-cs) | [hello-svelte-fs](examples/hello-svelte-fs) | [hello-svelte-cpp](examples/hello-svelte-cpp) |
+| **SolidJS** | [hello-solid-python](examples/hello-solid-python)   | [hello-solid-go](examples/hello-solid-go)   | [hello-solid-cs](examples/hello-solid-cs)   | [hello-solid-fs](examples/hello-solid-fs)   | [hello-solid-cpp](examples/hello-solid-cpp)   |
+| **Vanilla** | [hello-vanilla-python](examples/hello-vanilla-python) | [hello-vanilla-go](examples/hello-vanilla-go) | [hello-vanilla-cs](examples/hello-vanilla-cs) | [hello-vanilla-fs](examples/hello-vanilla-fs) | [hello-vanilla-cpp](examples/hello-vanilla-cpp) |
+
 ## Supported Backend Languages
 
 | Language | Adapter Status | IPC Method |
