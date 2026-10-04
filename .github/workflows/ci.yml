@@ -75,6 +75,24 @@ jobs:
         working-directory: cli
         run: npm test
 
+  js-sdk:
+    name: JavaScript SDK (packed consumer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install SDK build dependencies
+        working-directory: sdk/js
+        run: npm ci --ignore-scripts
+
+      - name: Test packed ESM and type contracts
+        working-directory: sdk/js
+        run: npm test
+
   python-sdk:
     name: Python SDK
     runs-on: ubuntu-latest

@@ -229,6 +229,7 @@ This is the documentation index. Each topic has one primary maintained guide:
 | Contributor setup and checks | [Contributing](CONTRIBUTING.md) |
 | Vulnerability reporting | [Security policy](SECURITY.md) |
 | Host crate usage | [Host core](host-core/README.md) |
+| JavaScript module and package contract | [JavaScript SDK](sdk/js/README.md) |
 | Language adapter setup | [Python](sdk/python/README.md), [Go](sdk/go/README.md), [.NET](sdk/dotnet/README.md), [Rust](sdk/rust/README.md), [Swift](sdk/swift/README.md) |
 | Configuration editor schema | [Config schema](vscode-extension/schemas/gateorix-config.schema.json) |
 | Example setup | Per-example README files in the matrix above |
