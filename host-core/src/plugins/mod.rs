@@ -5,6 +5,7 @@
 //! IPC bridge as named channels.
 
 use crate::ipc::protocol::{IpcRequest, IpcResponse};
+use crate::permissions::PermissionGuard;
 
 /// Trait that all host plugins must implement.
 pub trait Plugin: Send + Sync {
@@ -12,7 +13,7 @@ pub trait Plugin: Send + Sync {
     fn namespace(&self) -> &str;
 
     /// Handle an incoming IPC request on this plugin's channel.
-    fn handle(&self, request: &IpcRequest) -> IpcResponse;
+    fn handle(&self, request: &IpcRequest, permissions: &PermissionGuard) -> IpcResponse;
 
     /// Called once when the plugin is registered with the host.
     fn on_init(&self) {}

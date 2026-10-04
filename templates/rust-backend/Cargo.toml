@@ -1,0 +1,12 @@
+[package]
+name = "gateorix-rust-backend"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+publish = false
+
+[workspace]
+
+[dependencies]
+gateorix-adapter = { path = "gateorix-adapter" }
+serde_json = "1"

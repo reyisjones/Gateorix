@@ -6,7 +6,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import chalk from "chalk";
 
-const SUPPORTED_RUNTIMES = ["python", "go", "dotnet", "swift", "cpp"];
+const SUPPORTED_RUNTIMES = ["python", "go", "dotnet", "swift", "cpp", "rust"];
 
 const RUNTIME_CONFIG: Record<string, { type: string; entry: string }> = {
   python: { type: "python", entry: "backend/main.py" },
@@ -14,6 +14,7 @@ const RUNTIME_CONFIG: Record<string, { type: string; entry: string }> = {
   dotnet: { type: "dotnet", entry: "backend/Program.cs" },
   swift: { type: "swift", entry: "backend/main.swift" },
   cpp: { type: "cpp", entry: "backend/main.cpp" },
+  rust: { type: "rust", entry: "backend/Cargo.toml" },
 };
 
 /** Walk up from __dirname to find the package root (where examples/ lives). */
@@ -45,6 +46,9 @@ export async function addRuntimeCommand(language: string): Promise<void> {
   }
 
   const config = await fs.readJson(configPath);
+  if (language === "rust" && await fs.pathExists(path.join(projectRoot, "frontend", "src-tauri"))) {
+    throw new Error("Rust runtime scaffolding currently supports browser projects only; native shell integration must be configured explicitly.");
+  }
   if (config.runtime?.type) {
     console.error(chalk.yellow(`\n  Runtime already set to "${config.runtime.type}".`));
     console.error(chalk.dim("  Remove the runtime section from gateorix.config.json to change it.\n"));
@@ -59,12 +63,22 @@ export async function addRuntimeCommand(language: string): Promise<void> {
     go: "hello-react-go",
     dotnet: "hello-react-cs",
     cpp: "hello-react-cpp",
+    rust: "hello-react-rust",
     swift: "hello-react-python", // fallback — swift template TBD
   };
 
   const pkgRoot = findPackageRoot();
-  const templateBackend = path.join(pkgRoot, "examples", langMap[language], "backend");
+  const bundledBackend = path.resolve(__dirname, "..", "..", "templates", langMap[language], "backend");
+  const templateBackend = await fs.pathExists(bundledBackend)
+    ? bundledBackend : path.join(pkgRoot, "examples", langMap[language], "backend");
   const targetBackend = path.join(projectRoot, "backend");
+
+  if (language === "rust") {
+    if (!(await fs.pathExists(templateBackend))) throw new Error("Rust template missing; run npm run sync-templates in the CLI checkout.");
+    if (await fs.pathExists(targetBackend) && (await fs.readdir(targetBackend)).length > 0) {
+      throw new Error("Refusing to merge Rust into a nonempty backend directory.");
+    }
+  }
 
   if (await fs.pathExists(templateBackend)) {
     await fs.copy(templateBackend, targetBackend, { overwrite: false });
@@ -115,6 +129,7 @@ export async function addRuntimeCommand(language: string): Promise<void> {
     dotnet: ".NET SDK ≥ 8.0 — cd backend && dotnet restore",
     cpp: "C++ compiler + CMake ≥ 3.16 — cd backend && cmake -B build && cmake --build build",
     swift: "Swift ≥ 5.9 — cd backend && swift build",
+    rust: "Rust + Cargo >= 1.82 — cd backend && cargo build",
   };
 
   console.log(`\n  Prerequisites: ${chalk.dim(prereqs[language])}`);

@@ -38,15 +38,15 @@ cd my-app
 gx dev
 ```
 
-## Supported Templates (25 combinations)
+## Supported Templates (30 combinations in this checkout)
 
-`gx init` prompts for a **UI framework** and a **backend language**. Any combination works — 25 in total.
+`gx init` prompts for a **UI framework** and a **backend language**. The 25 checked-in examples are supplemented by five generated Rust browser templates. Rust support is unreleased and requires a CLI built from this checkout.
 
 **UI frameworks:** `react`, `vue`, `svelte`, `solid`, `vanilla`
 
-**Backend languages:** `python`, `go`, `c#`, `f#`, `c++`
+**Backend languages:** `python`, `go`, `c#`, `f#`, `c++`, `rust`
 
-Each combination maps to an example at `examples/hello-<ui>-<lang>` — for instance:
+Non-Rust combinations map to examples at `examples/hello-<ui>-<lang>` — for instance:
 
 - `gx init my-app` → pick `vue` + `go` → scaffolds from `hello-vue-go`
 - `gx init my-app` → pick `svelte` + `c#` → scaffolds from `hello-svelte-cs`
@@ -55,22 +55,26 @@ Each combination maps to an example at `examples/hello-<ui>-<lang>` — for inst
 ## Adding Runtimes & Plugins
 
 ```bash
-gx add runtime python     # or: go, dotnet, cpp, swift
+gx add runtime python     # or: go, dotnet, cpp, swift, rust
 gx add plugin filesystem  # or: process, notifications, clipboard
 ```
 
 ## What You Get
 
 - **5 UI frameworks** — React, Vue 3, Svelte, SolidJS, or plain HTML/TS (Vanilla)
-- **5 backend languages** — Python, Go, C#, F#, C++
+- **6 backend choices** — Python, Go, C#, F#, C++, Rust
 - **Native host runtime** — windows, menus, file access, notifications via Rust/Tauri
 - **Plugin system** — filesystem, clipboard, notifications, process, and custom plugins
 - **Secure IPC bridge** — JSON messages with permission-based access control
 
 ## Requirements
 
+For Rust browser projects, use `gx init my-app --template react-rust --no-install`, install frontend dependencies, then run `gx dev`. Omit `--no-install` for automatic dependency installation. `gx build --release` compiles backend and frontend assets, not a native Rust installer. Adding Rust to an existing native shell is explicitly rejected.
+
+Rust templates bundle SDK source and are prepared by `npm run sync-templates`. `npm test` tests the packed CLI outside the repository, including all five Rust selections and stdio/HTTP backend calls. These new options are not yet in the published 0.3.2 release.
+
 - Node.js >= 18
-- Rust (for Tauri compilation)
+- Rust/Cargo >= 1.82 for the Rust backend adapter (other native examples have their own requirements)
 - Python 3.10+ (for Python backend adapter)
 
 ## Links

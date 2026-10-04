@@ -4,6 +4,7 @@
 //! manifest explicitly grants "process" permission.
 
 use gateorix_host_core::ipc::protocol::{IpcRequest, IpcResponse};
+use gateorix_host_core::permissions::{Capability, PermissionGuard, PermissionResult};
 use gateorix_host_core::plugins::Plugin;
 use std::process::Command;
 use tracing::info;
@@ -57,7 +58,10 @@ impl Plugin for ProcessPlugin {
         "process"
     }
 
-    fn handle(&self, request: &IpcRequest) -> IpcResponse {
+    fn handle(&self, request: &IpcRequest, permissions: &PermissionGuard) -> IpcResponse {
+        if let PermissionResult::Denied(reason) = permissions.check(&Capability::Process) {
+            return IpcResponse::error(&request.id, reason);
+        }
         let action = request.channel.strip_prefix("process.").unwrap_or("");
         match action {
             "execute" => self.execute(request),
@@ -67,5 +71,33 @@ impl Plugin for ProcessPlugin {
 
     fn on_init(&self) {
         info!("process plugin initialized");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gateorix_host_core::app::PermissionConfig;
+
+    #[test]
+    fn direct_call_cannot_bypass_denial() {
+        let permissions = PermissionGuard::new(
+            PermissionConfig {
+                filesystem: vec![],
+                process: false,
+                clipboard: false,
+                notifications: false,
+            },
+            ".".into(),
+        );
+        let response = ProcessPlugin::new().handle(
+            &IpcRequest::new(
+                "process.execute",
+                serde_json::json!({"program": "not-a-real-executable"}),
+            ),
+            &permissions,
+        );
+        assert!(!response.ok);
+        assert!(response.payload.to_string().contains("not permitted"));
     }
 }

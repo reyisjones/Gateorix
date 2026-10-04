@@ -107,10 +107,16 @@ impl RuntimeAdapter for StdioProcess {
             "starting sidecar process"
         );
 
-        let program = resolve_program(&self.config.runtime_type);
-        let mut cmd = Command::new(&program);
-        cmd.arg(&self.config.entry)
-            .stdin(Stdio::piped())
+        let mut cmd = if self.config.runtime_type == "rust" {
+            let mut command = Command::new("cargo");
+            command.args(["run", "--quiet", "--manifest-path", &self.config.entry]);
+            command
+        } else {
+            let mut command = Command::new(resolve_program(&self.config.runtime_type));
+            command.arg(&self.config.entry);
+            command
+        };
+        cmd.stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 

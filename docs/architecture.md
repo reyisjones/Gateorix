@@ -1,6 +1,6 @@
 # Architecture
 
-Gateorix is organized into six layers, each with clearly defined responsibilities. Communication between layers flows through well-defined interfaces and is always permission-checked.
+Gateorix separates frontend, host, runtime and plugin responsibilities. Built-in host plugins enforce manifest permissions; custom native handlers and development HTTP backends remain separate trust boundaries.
 
 ## Layer Diagram
 
@@ -29,7 +29,7 @@ Gateorix is organized into six layers, each with clearly defined responsibilitie
 │  • App lifecycle  │            │  • Adapter protocol    │
 │  • Window mgmt    │            │  • Sidecar process mgmt│
 │  • Menu / tray    │◄──────────►│  • Python, Go, .NET,   │
-│  • Permission     │  routing   │    Swift, Obj-C workers│
+│  • Permission     │  routing   │    Rust, C++, Swift    │
 │    enforcement    │            │  • stdio / HTTP IPC    │
 │  • Plugin host    │            │                        │
 └────────┬──────────┘            └────────────────────────┘
@@ -58,7 +58,7 @@ Gateorix is organized into six layers, each with clearly defined responsibilitie
 
 The UI runs inside a platform-native webview. Any web framework can be used — React, Vue, Svelte, or plain HTML/JS. The frontend **never** accesses OS APIs directly; all interaction goes through the `@gateorix/bridge` SDK.
 
-**Key constraint:** The webview is sandboxed. There is no `require('fs')`, no `child_process`, no direct network calls to the sidecar. Everything is mediated by the bridge.
+**Key constraint:** The webview does not expose Node filesystem/process APIs. Desktop examples use Tauri commands; browser development makes direct loopback HTTP requests to the backend. The standalone JS SDK and example-specific bridges are not yet one unified implementation.
 
 ## 2. Bridge Layer
 
@@ -95,6 +95,8 @@ This is what makes Gateorix language-agnostic. The host core:
 
 The sidecar process uses a language-specific SDK (e.g. `gateorix` Python package) to register command handlers and run the message loop.
 
+Rust backends use `sdk/rust` and `runtime: { "type": "rust", "entry": "backend/Cargo.toml" }`. The CLI runs `cargo run --quiet --manifest-path Cargo.toml -- --http` for browser development and builds the backend with Cargo. Generated templates vendor the local SDK source, so no unpublished crate must be downloaded. The host process launcher also recognizes Rust Cargo manifests, but its generic stdio relay is still incomplete; native Rust installer integration is not provided by these templates.
+
 **Dual IPC modes:** In development, the frontend can fall back to an HTTP bridge (port 3001) for browser-based iteration without compiling the Rust host. In production (Tauri webview), all IPC goes through native invoke commands.
 
 ## 5. Application Shell Layer
@@ -124,6 +126,8 @@ Plugins expose OS capabilities to the bridge. Each plugin:
 
 Built-in plugins: `filesystem`, `process`, `notifications`, `clipboard`. Custom plugins can be added.
 
+`Bridge::with_permissions` and `register_plugin` pass a shared guard to plugin calls. Direct built-in calls also require the guard. Filesystem operations use directory capabilities held by the guard; the filesystem plugin does not retain unrestricted ambient paths. Custom plugin implementations are trusted native code and must honor the provided policy.
+
 ## 6. Packaging Layer
 
 Handles building and distributing the final application:
@@ -138,6 +142,6 @@ Handles building and distributing the final application:
 See [security.md](security.md) for the full security design. Key principles:
 
 - **Deny by default** — all capabilities require explicit manifest grants.
-- **No direct sidecar access** — the frontend never talks to the runtime adapter directly.
+- **Explicit transport boundaries** — browser development uses direct loopback HTTP; desktop integrations use native commands.
 - **Scoped filesystem** — file access limited to declared paths.
 - **IPC validation** — all messages validated before dispatch.

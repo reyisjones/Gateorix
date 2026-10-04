@@ -31,7 +31,8 @@ program
 program
   .command("init <name>")
   .description("Scaffold a new Gateorix project")
-  .option("-t, --template <template>", "starter template", "react-python")
+  .option("-t, --template <template>", "starter template (for example react-rust)")
+  .option("--no-install", "skip frontend dependency installation")
   .action(initCommand);
 
 program
@@ -54,7 +55,7 @@ const addCmd = program.command("add").description("Add a runtime adapter or plug
 
 addCmd
   .command("runtime <language>")
-  .description("Add a runtime adapter (python, go, dotnet, swift, cpp)")
+  .description("Add a runtime adapter (python, go, dotnet, swift, cpp, rust)")
   .action(addRuntimeCommand);
 
 addCmd
@@ -62,6 +63,9 @@ addCmd
   .description("Add a plugin (filesystem, process, notifications, clipboard)")
   .action(addPluginCommand);
 
-program.parse();
+program.parseAsync().catch((error: Error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
 
 // [ci publish trigger] No-op comment to trigger publish workflow

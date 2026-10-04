@@ -34,7 +34,7 @@ function startProcess(
   const child = spawn(command, args, {
     cwd,
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
+    shell: process.platform === "win32" && (command === "npm" || command === "npx"),
     env: { ...process.env, ...env },
   });
 
@@ -108,6 +108,9 @@ export async function devCommand(): Promise<void> {
     } else if (runtimeType === "go") {
       cmd = "go";
       args = ["run", ".", "--http"];
+    } else if (runtimeType === "rust") {
+      cmd = "cargo";
+      args = ["run", "--quiet", "--manifest-path", entryFile, "--", "--http"];
     } else if (runtimeType === "dotnet" || runtimeType === "csharp" || runtimeType === "fsharp") {
       cmd = "dotnet";
       args = ["run"];

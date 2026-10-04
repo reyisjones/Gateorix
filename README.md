@@ -20,9 +20,9 @@ Gateorix is a lightweight desktop application framework built on [Tauri](https:/
 
 - **A web-based frontend** — use React, Vue, Svelte, or plain HTML/JS.
 - **A native host runtime** — window management, menus, system tray, file dialogs, notifications, and more.
-- **Backend language adapters** — write your business logic in Python, Go, C#, F#, C++, or any language that compiles to a binary.
+- **Backend language adapters** — write your business logic in Python, Go, Rust, C#, F#, C++, or any language that compiles to a binary.
 - **A plugin system** — extend OS capabilities with first-party and custom plugins.
-- **A secure IPC bridge** — all communication between frontend, host, and backend is permission-checked and sandboxed.
+- **Permission-aware host plugins** — built-in filesystem, process, clipboard and notification operations require a permission guard. Native plugins and backend code remain trusted code, not sandboxed workers.
 - **A VS Code extension** — IntelliSense, config validation, and integrated commands.
 
 Think of it as the gateway between modern web UI and native desktop power.
@@ -41,12 +41,12 @@ Think of it as the gateway between modern web UI and native desktop power.
 │       (Secure IPC · JSON messages · events)     │
 └──────┬───────────────────────────────┬──────────┘
        │                               │
-┌──────▼──────────┐          ┌─────────▼──────────┐
-│   Host Core     │          │  Runtime Adapters  │
-│  (Rust/Tauri)   │          │  Python · Go · .NET│
-│  Windows, menus │          │  C++ · Any binary  │
-│  Tray, dialogs  │          │  stdio / HTTP IPC  │
-│  Logging, perms │          └────────────────────┘
+┌──────▼──────────┐          ┌─────────▼────────────┐
+│   Host Core     │          │  Runtime Adapters    │
+│  (Rust/Tauri)   │          │  Python · Go · .NET. │
+│  Windows, menus │          │  Rust · C++ · Binary │
+│  Tray, dialogs  │          │  stdio / HTTP IPC    │
+│  Logging, perms │          └──────────────────────┘
 └──────┬──────────┘
        │
 ┌──────▼──────────┐
@@ -88,7 +88,7 @@ Use either `gateorix` or the shorter `gx` alias — both are installed when you 
 | `gateorix dev` | `gx dev` | Start the app in development mode with hot reload |
 | `gateorix build` | `gx build` | Build the app for production |
 | `gateorix doctor` | `gx doctor` | Check environment and dependencies |
-| `gateorix add runtime <lang>` | `gx add runtime <lang>` | Add a runtime adapter (python, go, dotnet, swift, cpp) |
+| `gateorix add runtime <lang>` | `gx add runtime <lang>` | Add a runtime adapter (python, go, dotnet, swift, cpp, rust) |
 | `gateorix add plugin <name>` | `gx add plugin <name>` | Add a plugin (filesystem, process, notifications, clipboard) |
 
 ## Project Structure
@@ -102,6 +102,7 @@ gateorix/
 │   ├── js/                  # JavaScript/TypeScript bridge
 │   ├── python/              # Python adapter SDK
 │   ├── go/                  # Go adapter SDK (stdio + HTTP)
+│   ├── rust/                # Rust adapter SDK (stdio + development HTTP)
 │   ├── dotnet/              # .NET adapter SDK (stdio + ASP.NET Minimal API)
 │   └── swift/               # Swift adapter SDK (planned)
 ├── plugins/                 # Host plugins
@@ -148,6 +149,7 @@ Every UI × backend combination ships as a runnable example. `gx init <name>` sc
 |---|---|---|
 | Python | ✅ Implemented | stdio / HTTP |
 | Go | ✅ Implemented | stdio / HTTP |
+| Rust | Implemented; browser templates, native bundling pending | stdio / development HTTP |
 | C# / F# (.NET) | ✅ Implemented | stdio / HTTP |
 | C++ | ✅ Implemented | stdio / HTTP |
 | Swift | ✅ Implemented (skeleton) | stdio |
@@ -158,6 +160,31 @@ Every UI × backend combination ships as a runnable example. `gx init <name>` sc
 2. **Host Core** (Rust) manages the app lifecycle, windows, menus, system tray, file dialogs, and enforces the permission model. Includes structured logging with `tracing`.
 3. **Runtime Adapters** spawn backend processes (sidecars) in your chosen language. The host core relays IPC messages between the frontend and these processes via stdio or HTTP.
 4. **Plugins** expose OS capabilities (filesystem, clipboard, notifications) through a secure, permission-gated API.
+
+The host-core permission guard applies to built-in plugin dispatch and direct built-in plugin calls. Custom handlers, native code, and the examples' separate Tauri commands must enforce their own policy; HTTP browser development talks directly to its backend.
+
+## New Features (Unreleased)
+
+- **Guarded plugin execution:** built-in plugin calls now require a `PermissionGuard`; unconfigured bridges deny privileged namespaces.
+- **Scoped filesystem I/O:** opened directory capabilities constrain reads, writes, existence checks and directory listings. Parent traversal and absolute request paths are rejected; symlinks cannot resolve outside the granted directory.
+- **Rust backend SDK:** command registration, correlated JSON responses, bounded stdio frames, and loopback HTTP for local browser development.
+- **Five generated Rust templates:** React, Vue, Svelte, Solid and Vanilla, in addition to the 25 checked-in examples above. These browser-only variants are generated during CLI packing, not stored as five duplicated examples.
+- **Headless scaffolding:** `--template` selects a template without prompts; `--no-install` skips dependency installation.
+- **Regression coverage:** direct plugin/dispatcher denial tests and a packed-CLI test that scaffolds all Rust variants and exercises a generated backend.
+
+After building this checkout's CLI (`npm ci && npm run build && npm run sync-templates` inside `cli`):
+
+```bash
+node cli/dist/index.js init my-rust-app --template vanilla-rust --no-install
+cd my-rust-app/frontend
+npm install
+cd ..
+node ../cli/dist/index.js dev
+```
+
+With a CLI built from this checkout installed, use `gx init my-rust-app --template vanilla-rust` instead. The currently published npm version does not acquire these unreleased changes automatically.
+
+Rust projects require Rust/Cargo 1.82 or newer. `gx build --release` builds the backend binary and frontend assets; it does **not** create a Rust native installer. `gx add runtime rust` supports browser projects without an existing runtime or nonempty backend; native-shell integration is rejected until explicitly configured. See the [Rust SDK](sdk/rust/README.md) and [security migration guidance](docs/security.md).
 
 All IPC uses JSON messages with request/response and event patterns. Binary transport (MessagePack / Protocol Buffers) is planned for Phase 4.
 

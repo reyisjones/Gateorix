@@ -59,11 +59,20 @@ jobs:
 
       - name: Install dependencies
         working-directory: cli
-        run: npm install
+        run: npm ci
 
       - name: Build
         working-directory: cli
         run: npm run build
+
+      - name: Install Rust for runtime smoke tests
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Packed Rust runtime regression test
+        working-directory: cli
+        run: npm test
 
   python-sdk:
     name: Python SDK

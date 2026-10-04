@@ -94,8 +94,8 @@ export async function doctorCommand(): Promise<void> {
   // --- Toolchain checks ---
   console.log(chalk.bold("  Toolchain"));
   const toolchecks: CheckResult[] = [
-    runCheck("Rust (rustc)", "rustc --version", "1.70.0"),
-    runCheck("Cargo", "cargo --version", "1.70.0"),
+    runCheck("Rust (rustc)", "rustc --version", "1.82.0"),
+    runCheck("Cargo", "cargo --version", "1.82.0"),
     runCheck("Node.js", "node --version", "18.0.0"),
     runCheck("npm", "npm --version", "9.0.0"),
   ];
@@ -202,7 +202,7 @@ export async function doctorCommand(): Promise<void> {
  */
 export function quickDoctorCheck(): void {
   const coreChecks: CheckResult[] = [
-    runCheck("Rust", "rustc --version", "1.70.0"),
+    runCheck("Rust", "rustc --version", "1.82.0"),
     runCheck("Node.js", "node --version", "18.0.0"),
   ];
   const fails = coreChecks.filter((r) => r.status === "fail");

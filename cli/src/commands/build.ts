@@ -48,6 +48,12 @@ export async function buildCommand(options: BuildOptions): Promise<void> {
   const frontendDir = path.join(projectRoot, "frontend");
   const hasTauri = await fs.pathExists(path.join(frontendDir, "src-tauri"));
 
+  if (config.runtime?.type === "rust") {
+    if (config.runtime.entry !== "backend/Cargo.toml") throw new Error("Rust build expects backend/Cargo.toml.");
+    if (hasTauri) throw new Error("Native Rust bundling is not configured by this CLI yet.");
+    run(options.release ? "cargo build --release" : "cargo build", path.join(projectRoot, "backend"), "Building Rust backend");
+  }
+
   // 1. Install frontend dependencies if needed
   const nodeModules = path.join(frontendDir, "node_modules");
   if (await fs.pathExists(path.join(frontendDir, "package.json")) && !(await fs.pathExists(nodeModules))) {
@@ -87,8 +93,12 @@ export async function buildCommand(options: BuildOptions): Promise<void> {
     if (await fs.pathExists(distDir)) {
       console.log(`  ${chalk.green("→")} Output: ${path.relative(projectRoot, distDir)}`);
     }
-    console.log(chalk.yellow("\n  Note: No src-tauri found. To produce a native installer,"));
-    console.log(chalk.yellow("  run `npx tauri init` in the frontend directory first."));
+    if (config.runtime?.type === "rust") {
+      console.log(chalk.yellow("\n  Rust backend and frontend assets built. Native Rust bundling is not configured."));
+    } else {
+      console.log(chalk.yellow("\n  Note: No src-tauri found. To produce a native installer,"));
+      console.log(chalk.yellow("  run `npx tauri init` in the frontend directory first."));
+    }
   }
 
   console.log("");

@@ -37,7 +37,7 @@
         "type": {
           "type": "string",
           "description": "Runtime language",
-          "enum": ["python", "go", "dotnet", "swift"]
+          "enum": ["python", "go", "dotnet", "swift", "cpp", "rust"]
         },
         "entry": {
           "type": "string",
@@ -51,11 +51,9 @@
       "description": "Permission declarations",
       "properties": {
         "filesystem": {
-          "oneOf": [
-            { "type": "boolean" },
-            { "type": "array", "items": { "type": "string" } }
-          ],
-          "description": "Filesystem access paths (or false to deny)"
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Existing project-relative directory scopes; an empty array denies filesystem access"
         },
         "process": {
           "type": "boolean",

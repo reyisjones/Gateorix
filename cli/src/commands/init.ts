@@ -13,11 +13,13 @@ import { quickDoctorCheck } from "./doctor.js";
 
 interface InitOptions {
   template?: string;
+  install?: boolean;
 }
 
 const BACKEND_LANGUAGES: Record<string, string> = {
   python: "python",
   go: "go",
+  rust: "rust",
   "c#": "cs",
   "f#": "fs",
   "c++": "cpp",
@@ -75,6 +77,9 @@ export async function initCommand(
   name: string,
   options: InitOptions
 ): Promise<void> {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    throw new Error("Project name must use lowercase letters, digits and hyphens.");
+  }
   const targetDir = path.resolve(process.cwd(), name);
 
   if (await fs.pathExists(targetDir)) {
@@ -86,8 +91,19 @@ export async function initCommand(
   quickDoctorCheck();
 
   // Interactive prompts
-  const inquirer = (await import("inquirer")).default;
-  const answers = await inquirer.prompt([
+  let answers: { language: string; ui: string };
+  if (options.template) {
+    const selected = options.template.replace(/^hello-/, "");
+    const separator = selected.lastIndexOf("-");
+    const ui = selected.slice(0, separator);
+    const slug = selected.slice(separator + 1);
+    const language = Object.keys(BACKEND_LANGUAGES).find((key) => BACKEND_LANGUAGES[key] === slug);
+    if (!UI_FRAMEWORKS.includes(ui) || !language) throw new Error(`Unknown template: ${options.template}`);
+    answers = { ui, language };
+  } else {
+    if (!process.stdin.isTTY) throw new Error("Use --template <ui>-<backend> in noninteractive mode.");
+    const inquirer = (await import("inquirer")).default;
+    answers = await inquirer.prompt([
     {
       type: "list",
       name: "language",
@@ -102,7 +118,8 @@ export async function initCommand(
       choices: UI_FRAMEWORKS,
       default: "react",
     },
-  ]);
+    ]);
+  }
 
   const langSlug = BACKEND_LANGUAGES[answers.language];
   const templateName = `hello-${answers.ui}-${langSlug}`;
@@ -147,7 +164,7 @@ export async function initCommand(
 
   // Install frontend dependencies
   const frontendDir = path.join(targetDir, "frontend");
-  if (await fs.pathExists(path.join(frontendDir, "package.json"))) {
+  if (options.install !== false && await fs.pathExists(path.join(frontendDir, "package.json"))) {
     console.log(`  ${chalk.cyan("→")} Installing frontend dependencies...`);
     try {
       execSync("npm install", { cwd: frontendDir, stdio: "pipe" });

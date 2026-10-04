@@ -4,6 +4,7 @@
 //! Requires "notifications" permission in the app manifest.
 
 use gateorix_host_core::ipc::protocol::{IpcRequest, IpcResponse};
+use gateorix_host_core::permissions::{Capability, PermissionGuard, PermissionResult};
 use gateorix_host_core::plugins::Plugin;
 use notify_rust::Notification;
 use tracing::info;
@@ -53,7 +54,10 @@ impl Plugin for NotificationsPlugin {
         "notifications"
     }
 
-    fn handle(&self, request: &IpcRequest) -> IpcResponse {
+    fn handle(&self, request: &IpcRequest, permissions: &PermissionGuard) -> IpcResponse {
+        if let PermissionResult::Denied(reason) = permissions.check(&Capability::Notifications) {
+            return IpcResponse::error(&request.id, reason);
+        }
         let action = request.channel.strip_prefix("notifications.").unwrap_or("");
         match action {
             "send" => self.send_notification(request),

@@ -5,7 +5,7 @@
  *
  * Runs automatically via `npm run prepack` before publish.
  */
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,6 +41,32 @@ for (const entry of entries) {
       return true;
     },
   });
+  count++;
+}
+
+for (const ui of ["react", "vue", "svelte", "solid", "vanilla"]) {
+  const name = `hello-${ui}-rust`;
+  const destination = join(dstTemplates, name);
+  cpSync(join(dstTemplates, `hello-${ui}-go`), destination, { recursive: true });
+  rmSync(join(destination, "backend"), { recursive: true, force: true });
+  rmSync(join(destination, "frontend", "src-tauri"), { recursive: true, force: true });
+  cpSync(join(repoRoot, "templates", "rust-backend"), join(destination, "backend"), {
+    recursive: true,
+    filter: (source) => !skip.has(source.split(/[\\/]/).pop()) && !source.endsWith("Cargo.lock"),
+  });
+  const sdkDestination = join(destination, "backend", "gateorix-adapter");
+  mkdirSync(sdkDestination, { recursive: true });
+  for (const entry of ["Cargo.toml", "src"]) {
+    cpSync(join(repoRoot, "sdk", "rust", entry), join(sdkDestination, entry), { recursive: true });
+  }
+  cpSync(join(repoRoot, "LICENSE"), join(sdkDestination, "LICENSE"));
+  const configPath = join(destination, "gateorix.config.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  config.name = name;
+  config.runtime = { type: "rust", entry: "backend/Cargo.toml" };
+  config.permissions = { filesystem: [], process: false, notifications: false, clipboard: false };
+  writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+  writeFileSync(join(destination, "README.md"), `# ${name}\n\nRust backend with ${ui} browser development. Run npm install in frontend, then gx dev from the project root.\n\nThe backend supports stdio and loopback HTTP development mode. Native Rust installer bundling is not configured.\n`);
   count++;
 }
 

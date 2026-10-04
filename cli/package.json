@@ -21,7 +21,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint src/",
-    "test": "echo \"Tests not yet configured\"",
+    "test": "npm run build && npm run sync-templates && node --test tests/*.test.mjs",
     "sync-templates": "node scripts/sync-templates.mjs",
     "prepack": "npm run sync-templates && npm run build"
   },
