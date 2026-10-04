@@ -24,9 +24,21 @@ The sidecar reads newline-delimited JSON from stdin and writes newline-delimited
 
 **Advantages:** Simple, no port conflicts, no network exposure.
 
+The host-core `StdioProcess` implementation allows one request in flight, retains
+a buffered stdout reader, and checks response IDs. Each request and response is
+limited to 1 MiB excluding the newline. The 30-second deadline includes writing
+the request and reading the response. Concurrent calls fail rather than queue.
+Malformed or mismatched responses, EOF, and timeout invalidate the session;
+application errors with `ok: false` do not. Stderr is drained and discarded.
+Stdout must contain protocol responses only, not diagnostics or unsolicited events.
+See [host-core transport behavior](../host-core/README.md#stdio-runtime-transport).
+
 ### HTTP (Optional)
 
-The sidecar starts a local HTTP server on a configured port. The host core sends POST requests with JSON bodies and reads JSON responses.
+An HTTP integration starts a local sidecar server on a configured port and sends
+POST requests with JSON bodies. The examples and SDKs use this for browser
+development; `StdioProcess` does not implement HTTP and rejects that configuration.
+HTTP authorization and readiness are separate from the stdio implementation.
 
 **Advantages:** Familiar for web developers, supports concurrent requests natively.
 
@@ -78,14 +90,14 @@ Error:
 |---|---|---|
 | `id` | string | Must match the request ID |
 | `ok` | boolean | Whether the command succeeded |
-| `payload` | object | Result data on success, or `{ "error": "..." }` on failure |
+| `payload` | JSON value | Required result data on success, conventionally an object; `{ "error": "..." }` on failure |
 
 ## Lifecycle
 
 1. **Spawn:** The host core spawns the sidecar process based on `gateorix.config.json`.
-2. **Ready:** The sidecar starts its message loop (reading stdin or listening on HTTP).
+2. **Ready:** The sidecar starts its message loop (reading stdin or listening on HTTP). The stdio host reports `Running` after spawn; there is no readiness handshake yet.
 3. **Communication:** The host core relays IPC requests from the bridge to the sidecar.
-4. **Shutdown:** When the app closes, the host core sends a shutdown signal and terminates the process.
+4. **Shutdown:** Stopping or dropping `StdioProcess` terminates and reaps its direct child and joins its worker. There is no graceful protocol shutdown message or cross-platform descendant-process-tree guarantee yet.
 
 ## Implementing an Adapter
 
@@ -115,11 +127,11 @@ read line from stdin → parse JSON → find handler → execute → write JSON 
 The only requirement is that:
 1. Each line is a valid JSON object.
 2. The response `id` matches the request `id`.
-3. The response contains `ok` (boolean) and `payload` (object).
+3. The response contains `ok` (boolean) and a `payload` field (JSON value).
 
 ## Future Enhancements
 
 - **Binary transport** using MessagePack or Protocol Buffers.
 - **Streaming** support for long-running operations.
-- **Health checks** for monitoring sidecar liveness.
+- **Readiness and health handshakes** beyond the implemented process-exit monitoring.
 - **Multiplexed channels** for concurrent request processing.

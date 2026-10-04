@@ -52,7 +52,7 @@ Desktop integrations are intended to use:
 Frontend → Bridge → Host Core → Runtime Adapter
 ```
 
-Browser development instead uses direct loopback HTTP. Backend command authorization is the application's responsibility; host plugin permissions are not a backend sandbox. The host-core stdio `send()` implementation remains a placeholder and is not a complete production relay.
+Browser development instead uses direct loopback HTTP. Backend command authorization is the application's responsibility; host plugin permissions are not a backend sandbox. The host-core stdio transport now limits frame size and request duration, validates response envelopes and IDs, drains stderr, and invalidates failed sessions. It terminates and reaps the direct child, but does not guarantee descendant-process cleanup or provide a readiness handshake. These controls do not automatically apply to the examples' separate Tauri bridges. See [host-core transport behavior](../host-core/README.md#stdio-runtime-transport).
 
 The Rust SDK development server binds to `127.0.0.1`, checks Host and browser Origin, requires JSON POSTs with bounded Content-Length, and limits messages to 1 MiB. It is unauthenticated, has no application-level request deadline, and is not suitable for hostile local clients or production deployment. Do not register privileged handlers on it without an additional security design. CORS does not authenticate local processes.
 

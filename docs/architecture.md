@@ -95,7 +95,7 @@ This is what makes Gateorix language-agnostic. The host core:
 
 The sidecar process uses a language-specific SDK (e.g. `gateorix` Python package) to register command handlers and run the message loop.
 
-Rust backends use `sdk/rust` and `runtime: { "type": "rust", "entry": "backend/Cargo.toml" }`. The CLI runs `cargo run --quiet --manifest-path Cargo.toml -- --http` for browser development and builds the backend with Cargo. Generated templates vendor the local SDK source, so no unpublished crate must be downloaded. The host process launcher also recognizes Rust Cargo manifests, but its generic stdio relay is still incomplete; native Rust installer integration is not provided by these templates.
+Rust backends use `sdk/rust` and `runtime: { "type": "rust", "entry": "backend/Cargo.toml" }`. The CLI runs `cargo run --quiet --manifest-path Cargo.toml -- --http` for browser development and builds the backend with Cargo. Generated templates vendor the local SDK source, so no unpublished crate must be downloaded. The host process launcher also recognizes Rust Cargo manifests. Its generic stdio transport now implements bounded, correlated request/response I/O with deadlines and direct-child cleanup; it is not automatically wired into the examples' separate Tauri bridges. Native Rust installer integration, readiness handshakes, and descendant-process cleanup remain incomplete. See [host-core transport behavior](../host-core/README.md#stdio-runtime-transport).
 
 **Dual IPC modes:** In development, the frontend can fall back to an HTTP bridge (port 3001) for browser-based iteration without compiling the Rust host. In production (Tauri webview), all IPC goes through native invoke commands.
 
