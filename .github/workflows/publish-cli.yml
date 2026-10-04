@@ -2,60 +2,97 @@ name: Publish CLI to npm
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "cli/**"
-      - ".github/workflows/publish-cli.yml"
+    inputs:
+      version:
+        description: Exact CLI version to validate (must match package.json)
+        required: true
+        type: string
+      publish:
+        description: Publish after validation (leave disabled for a dry run)
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gateorix-cli-release
+  cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Build & Publish @gateorixjs/cli
-    runs-on: ubuntu-latest
+  checks:
+    uses: ./.github/workflows/ci.yml
 
-    # Only publish when the version in package.json actually changed
+  release:
+    name: Validate exact npm artifact
+    needs: checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
-
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Verify requested version
+        working-directory: cli
+        run: node -e 'if (require("./package.json").version !== process.env.RELEASE_VERSION) process.exit(1)'
+      - name: Check release eligibility
+        if: inputs.publish
+        run: node cli/scripts/release-check.mjs version "$RELEASE_VERSION"
       - name: Install dependencies
         working-directory: cli
-        run: npm ci
-
-      - name: Build
-        working-directory: cli
-        run: npm run build
-
-      - name: Check if version changed
-        id: version-check
+        run: npm ci --ignore-scripts
+      - name: Prepare and pack once
+        id: pack
         working-directory: cli
         run: |
-          LOCAL_VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED_VERSION=$(npm view @gateorixjs/cli version 2>/dev/null || echo "0.0.0")
-          echo "local=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
-          echo "published=$PUBLISHED_VERSION" >> "$GITHUB_OUTPUT"
-          if [ "$LOCAL_VERSION" != "$PUBLISHED_VERSION" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Version changed: $PUBLISHED_VERSION -> $LOCAL_VERSION"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Version unchanged ($LOCAL_VERSION), skipping publish"
-          fi
-
-      - name: Publish to npm
-        if: steps.version-check.outputs.changed == 'true'
+          npm run sync-templates
+          npm run build
+          mkdir -p "$RUNNER_TEMP/release"
+          npm pack --ignore-scripts --json --pack-destination "$RUNNER_TEMP/release" > "$RUNNER_TEMP/pack.json"
+          FILENAME=$(node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/pack.json")); console.log((Array.isArray(result) ? result[0] : Object.values(result)[0]).filename)')
+          TARBALL="$RUNNER_TEMP/release/$FILENAME"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "sha512=$(node scripts/release-check.mjs digest "$TARBALL")" >> "$GITHUB_OUTPUT"
+      - name: Test exact release artifact
         working-directory: cli
-        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Summary
-        if: steps.version-check.outputs.changed == 'true'
+          GATEORIX_TEST_TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: node --test tests/*.test.mjs
+      - name: Verify tested bytes
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          SHA512: ${{ steps.pack.outputs.sha512 }}
         run: |
-          echo "### Published @gateorixjs/cli@${{ steps.version-check.outputs.local }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Previous version: ${{ steps.version-check.outputs.published }}" >> "$GITHUB_STEP_SUMMARY"
+          node cli/scripts/release-check.mjs verify "$TARBALL" "$SHA512"
+      - name: Upload tested package for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-release-${{ github.sha }}
+          path: ${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+      - name: Publish tested package
+        if: inputs.publish
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          SHA512: ${{ steps.pack.outputs.sha512 }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          node cli/scripts/release-check.mjs version "$RELEASE_VERSION"
+          node cli/scripts/release-check.mjs verify "$TARBALL" "$SHA512"
+          npm publish "$TARBALL" --ignore-scripts --access public --tag latest --registry https://registry.npmjs.org
+      - name: Summary
+        env:
+          SHA512: ${{ steps.pack.outputs.sha512 }}
+          PUBLISH_ENABLED: ${{ inputs.publish }}
+        run: |
+          printf '### CLI artifact validated\nCommit: %s\nVersion: %s\nSHA-512: %s\nPublishing enabled: %s\n' "$GITHUB_SHA" "$RELEASE_VERSION" "$SHA512" "$PUBLISH_ENABLED" >> "$GITHUB_STEP_SUMMARY"

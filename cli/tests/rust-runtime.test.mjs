@@ -24,12 +24,19 @@ test("packed CLI scaffolds Rust independently and runs its backend", { timeout: 
   let server;
   let serverClosed;
   try {
-    const packed = JSON.parse(run(npm, ["pack", "--ignore-scripts", "--json", "--pack-destination", temporary], cliRoot));
-    const metadata = Array.isArray(packed) ? packed[0] : Object.values(packed)[0];
-    assert(metadata.files.some((file) => file.path === "templates/hello-react-rust/backend/gateorix-adapter/src/lib.rs"));
+    let tarball = process.env.GATEORIX_TEST_TARBALL;
+    if (tarball) {
+      tarball = resolve(tarball);
+      assert(existsSync(tarball), `Missing release tarball: ${tarball}`);
+    } else {
+      const packed = JSON.parse(run(npm, ["pack", "--ignore-scripts", "--json", "--pack-destination", temporary], cliRoot));
+      const metadata = Array.isArray(packed) ? packed[0] : Object.values(packed)[0];
+      assert(metadata.files.some((file) => file.path === "templates/hello-react-rust/backend/gateorix-adapter/src/lib.rs"));
+      tarball = join(temporary, metadata.filename);
+    }
     const consumer = join(temporary, "consumer");
     mkdirSync(consumer);
-    run(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", join(temporary, metadata.filename)], consumer);
+    run(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], consumer);
     const executable = join(consumer, "node_modules", "@gateorixjs", "cli", "dist", "index.js");
     for (const ui of ["react", "vue", "svelte", "solid", "vanilla"]) {
       run(process.execPath, [executable, "init", `${ui}-app`, "--template", `${ui}-rust`, "--no-install"], temporary);

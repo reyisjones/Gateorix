@@ -77,6 +77,51 @@ Rust templates bundle SDK source and are prepared by `npm run sync-templates`. `
 - Rust/Cargo >= 1.82 for the Rust backend adapter (other native examples have their own requirements)
 - Python 3.10+ (for Python backend adapter)
 
+## Release Validation (Maintainers)
+
+The release workflow is manual and defaults to validation only. Pushes do not
+publish. It calls the full CI workflow for the selected commit, then prepares
+one release tarball, tests that file in a temporary consumer, verifies its
+SHA-512 digest, and uploads it for review. Only `main` can run the release job.
+
+Safe local checks, from the repository root (Node.js and Rust/Cargo required;
+port 3001 must be free):
+
+```bash
+npm --prefix cli test
+release_dir=$(mktemp -d)
+npm pack ./cli --ignore-scripts --pack-destination "$release_dir"
+tarball="$release_dir/gateorixjs-cli-0.3.2.tgz"
+digest=$(node cli/scripts/release-check.mjs digest "$tarball")
+GATEORIX_TEST_TARBALL="$tarball" node --test cli/tests/*.test.mjs
+node cli/scripts/release-check.mjs verify "$tarball" "$digest"
+```
+
+These commands do not publish. The pack command relies on the build and template
+sync performed by `npm test`. Adjust the tarball version after a future version
+bump. `node cli/scripts/release-check.mjs version 0.3.2` is a separate read-only
+registry check: it must fail because that version already exists.
+
+An optional `npm publish "$tarball" --dry-run --ignore-scripts --access public
+--tag latest --registry https://registry.npmjs.org` does not publish, but npm
+may reject it because 0.3.2 already exists. The workflow's validation mode
+therefore uses packing, consumer tests, and digest verification without invoking
+`npm publish`. Authentication is tested only during an explicitly enabled release.
+
+After these workflow changes are committed and pushed, run **Publish CLI to npm**
+on `main` with the manifest version and leave **publish** disabled. Validation
+mode permits an already-published version; it does not certify release eligibility.
+For an actual release, explicitly enable **publish** after reviewing the intended
+version change. Stable `x.y.z` versions only are supported, using the `latest` tag.
+Duplicate versions, downgrades, registry errors, malformed responses, failed CI,
+and changed tarball bytes block publication. Registry eligibility and the digest
+are checked again immediately before publishing, without repacking.
+
+Release runs are serialized. The GitHub token has read-only repository access;
+the existing `NPM_TOKEN` secret is provided only to the publish step. Its validity
+and npm account permissions remain owner-managed and are not tested by dry runs.
+No npm account settings or credentials are changed by these checks.
+
 ## Links
 
 - [GitHub](https://github.com/reyisjones/Gateorix)
