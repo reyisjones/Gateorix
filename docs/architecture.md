@@ -115,7 +115,7 @@ The hello-react-python example demonstrates the canonical app shell pattern that
 
 **Authentication:** The `login` command validates credentials on the Rust side and returns a display name. The `logout` command is a no-op on the backend since session state lives in the frontend.
 
-## 5. Plugin Layer
+## 6. Plugin Layer
 
 Plugins expose OS capabilities to the bridge. Each plugin:
 
@@ -128,7 +128,7 @@ Built-in plugins: `filesystem`, `process`, `notifications`, `clipboard`. Custom 
 
 `Bridge::with_permissions` and `register_plugin` pass a shared guard to plugin calls. Direct built-in calls also require the guard. Filesystem operations use directory capabilities held by the guard; the filesystem plugin does not retain unrestricted ambient paths. Custom plugin implementations are trusted native code and must honor the provided policy.
 
-## 6. Packaging Layer
+## 7. Packaging Layer
 
 Handles building and distributing the final application:
 
